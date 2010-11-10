@@ -23,7 +23,7 @@ eda = data(1,:);      % select data
 % Downsample EDA. Only if EDA has been acquired with very high sampling 
 % rate (e.g. like inside the MR scanner). (help eda_downsample)
 %--------------------------------------------------------------------------
-if fs > 1000, [eda fs] = eda_downsample(eda, fs, ceil(fs/30)); end;
+if fs > 500, [eda fs] = eda_downsample(eda, fs, ceil(fs/500)); end;
 
 % Detect Electrodermal Responses (EDR). (help eda_edr)
 %--------------------------------------------------------------------------

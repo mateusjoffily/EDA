@@ -18,7 +18,7 @@ function [edaout filtout] = eda_filt(edain, fs, filtin, plotOK)
 %              (see filt_main.m)
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 10-11-2010 Mateus Joffily
 
 % Display frequence response and filtered signal
 if nargin < 4, plotOK = false; end
@@ -33,7 +33,7 @@ elseif nargin < 3 || ischar(filtin) && strcmp(filtin, 'default')
     filtin(1).name = 'butter';  % Butterworth filter 
     filtin(1).type = 'low';     % low-pass filter 
     filtin(1).n = 5;            % filter order
-    filtin(1).fc = 0.5;         % cutoff frequency (Hz)
+    filtin(1).fc = 1;         % cutoff frequency (Hz)
 end
 
 % Filter EDA

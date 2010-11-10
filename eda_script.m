@@ -1,7 +1,7 @@
 % Example script for processing and analyising Electrodemal Activity (EDA)
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 10-11-2010 Mateus Joffily
 
 % Matlab data file (.mat) must contain 'data' and 'fs' variables:
 % data - m-by-n matrix of EDA data (m channels by n samples)
@@ -16,7 +16,7 @@
 load(fullfile(pdata, fdata), 'data', 'fs');    % load data
 eda = data(1,:);      % select data
 
-% Filter EDA signal (default: low-pass filter @ 0.5Hz) (help eda_filt)
+% Filter EDA signal (default: low-pass filter @ 1Hz) (help eda_filt)
 %--------------------------------------------------------------------------
 [eda filt] = eda_filt(eda, fs, 'default');
 

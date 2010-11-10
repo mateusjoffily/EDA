@@ -18,20 +18,20 @@ function conds = eda_conditions(eda, fs, fcond, edr)
 %    conds  - structure array of EDR and EDL grouped by conditions
 %
 % Event related EDR criteria: 
-%    (1) if event duration is zero, event related EDRs latency is
-%        between def_latency(1) and def_latency(2); 
-%    (2) if event duration is greater than zero, event related EDRs 
-%        latency is between def_latency(1) and 'duration'. 
+%    (1) if event duration is zero, event-related EDRs onset latency is
+%        between latency_def(1) and latency_def(2); 
+%    (2) if event duration is greater than zero, event-related EDRs onset 
+%        latency is between latency_def(1) and 'duration'. 
 %
-% See below for def_latency definition. Default def_latency is [1 3];
-% 
-%    EDR latency is measured as 'valley time' minus 'event onset time'.
+% See below for latency_def definition. Default latency_def is [1 3].
+% EDR onset latency is measured as the difference between 'valley time' 
+% and 'event onset time'.
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 10-11-2010 Mateus Joffily
 
-% Default EDR latency range (seconds)
-def_latency = [1 3];
+% Default EDR onset latency window (seconds)
+latency_def = [1 3];
 
 if nargin < 4
     % Initialize edr, if it hasn't been provided
@@ -50,7 +50,7 @@ load(fcond, 'names', 'onsets', 'durations');
 
 % Initialize conds structure
 conds = struct('name', names, 'onsets', onsets, 'durations', durations, ...
-              'edr_latency', [], 'iEDR', [], 'N', [], ...
+              'latency_wdw', [], 'iEDR', [], 'N', [], ...
               'edl', struct('v', [], 't', []));
 
 % Loop over conditions
@@ -67,19 +67,19 @@ for nC = 1:length(conds)
         % EDR
         %------------------------------------------------------------------
         % Set analysis window for current event
-        conds(nC).edr_latency(1,nE) = conds(nC).onsets(nE) + def_latency(1);
+        conds(nC).latency_wdw(1,nE) = conds(nC).onsets(nE) + latency_def(1);
         if conds(nC).durations(nE) == 0 
-            conds(nC).edr_latency(2,nE) = conds(nC).onsets(nE) + def_latency(2);
+            conds(nC).latency_wdw(2,nE) = conds(nC).onsets(nE) + latency_def(2);
         else
-            conds(nC).edr_latency(2,nE) = conds(nC).onsets(nE) + ...
+            conds(nC).latency_wdw(2,nE) = conds(nC).onsets(nE) + ...
                                  conds(nC).durations(nE);
         end
 
-        % Find EDRs inside anlysis with (i.e. Event Related EDR (ER-EDR))
-        iEDR = find( [edr.iValleys] / fs >= conds(nC).edr_latency(1,nE) & ...
-                     [edr.iValleys] / fs <= conds(nC).edr_latency(2,nE) );
-        conds(nC).iEDR{nE} = iEDR;         % ER-EDR indexes in edr struct
-        conds(nC).N(nE) = length(iEDR);    % Number of ER-EDR
+        % Find EDRs within onset latency window (i.e. event-related EDRs)
+        iEDR = find( [edr.iValleys] / fs >= conds(nC).latency_wdw(1,nE) & ...
+                     [edr.iValleys] / fs <= conds(nC).latency_wdw(2,nE) );
+        conds(nC).iEDR{nE} = iEDR;         % er-EDR indexes in edr struct
+        conds(nC).N(nE) = length(iEDR);    % Number of er-EDR found
         
         % EDL
         %------------------------------------------------------------------

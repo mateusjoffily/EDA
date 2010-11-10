@@ -20,13 +20,13 @@ function varargout = eda_gui(varargin)
 %    eda_conditions.m) can also be loaded for inspection in the GUI and EDL
 %    measurement. Use File > Load conditions menu for loading conditions
 %    *.mat file. Conditions (shaded area) displayed in the GUI may 
-%    correspond the EDR latency criterion used by eda.conditions.m to 
+%    correspond the EDR onset latency criterion used by eda.conditions.m to 
 %    relate EDR to specific events or the duration of the event itself. 
 %    Use Data > Coditions > Shade menu to select between these two display 
 %    modes.
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 10-11-2010 Mateus Joffily
 
 % EDA_GUI M-file for eda_gui.fig
 %      EDA_GUI, by itself, creates a new EDA_GUI or raises the existing
@@ -102,7 +102,7 @@ data.fs = fs;
 data.edr.old = edr;
 data.edr.new = edr;
 data.conds = struct('name', [], 'onsets', [], 'durations', [], ...
-              'edr_latency', [], 'iEDR', [], 'N', [], ...
+              'latency_wdw', [], 'iEDR', [], 'N', [], ...
               'edl', struct('v', [], 't', []));
 
 % Set EDA axes
@@ -266,12 +266,12 @@ v = axis;
 % Update Conditions plot
 durationON = get(data.menu_data_conds_shade_duration, 'Checked');
 if strcmp(durationON, 'on')
-    edr_latency = repmat(data.conds(nC).onsets, 2, 1) + ...
+    latency_wdw = repmat(data.conds(nC).onsets, 2, 1) + ...
           [zeros(size(data.conds(nC).durations)); data.conds(nC).durations];
 else
-    edr_latency = data.conds(nC).edr_latency;
+    latency_wdw = data.conds(nC).latency_wdw;
 end
-x = sort([edr_latency(:); edr_latency(:)])';
+x = sort([latency_wdw(:); latency_wdw(:)])';
 y = repmat([0 v(4) v(4) 0], 1, length(x)/4);
 set(data.plot_conds, 'XData', x, 'YData', y);
 

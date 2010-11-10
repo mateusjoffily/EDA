@@ -10,7 +10,7 @@ function eda_save_text(ftxt, eda, fs, edr, conds)
 %           eda_conditions.m)
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 10-11-2010 Mateus Joffily
 
 if nargin == 4
     % Save EDR raw results
@@ -53,7 +53,7 @@ function save_grouped(ftxt, eda, fs, edr, conds)
 fid = fopen(ftxt, 'w');
 
 % Write header
-fprintf(fid, 'Condition\tOnset\tDuration\tIndexEDR\t');
+fprintf(fid, 'Condition\tOnset\tDuration\tLatencyWindow\tIndexEDR\t');
 fprintf(fid, 'NumberEDR\tMinEDR\tMaxEDR\tMeanEDR\tEDL\n');
 
 % Loop over Conditions
@@ -62,6 +62,8 @@ for iC = 1:numel(conds)
         
         fprintf(fid, '%s\t%0.2f\t%0.2f\t', conds(iC).name, ...
             conds(iC).onsets(iE), conds(iC).durations(iE));
+       
+        fprintf(fid, '%0.2f;%0.2f\t', conds(iC).latency_wdw(:,iE));
        
         if isempty(conds(iC).iEDR{iE})
             IndexEDR = ';';

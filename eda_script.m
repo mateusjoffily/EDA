@@ -1,7 +1,7 @@
 % Example script for processing and analyising Electrodemal Activity (EDA)
 % _________________________________________________________________________
 
-% Last modified 10-11-2010 Mateus Joffily
+% Last modified 11-11-2010 Mateus Joffily
 
 % Matlab data file (.mat) must contain 'data' and 'fs' variables:
 % data - m-by-n matrix of EDA data (m channels by n samples)

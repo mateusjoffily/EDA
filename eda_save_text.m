@@ -10,7 +10,7 @@ function eda_save_text(ftxt, eda, fs, edr, conds)
 %           eda_conditions.m)
 % _________________________________________________________________________
 
-% Last modified 10-11-2010 Mateus Joffily
+% Last modified 11-11-2010 Mateus Joffily
 
 if nargin == 4
     % Save EDR raw results

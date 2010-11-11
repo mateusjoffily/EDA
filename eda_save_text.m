@@ -16,16 +16,20 @@ if nargin == 4
     % Save EDR raw results
     save_raw(ftxt, eda, fs, edr);
 
+    % Goodbye message
+    disp([mfilename ': EDR raw results, done.']);
+    
 elseif nargin == 5
     % Save EDR grouped by conditions
     save_grouped(ftxt, eda, fs, edr, conds);
+    
+    % Goodbye message
+    disp([mfilename ': EDR/EDL grouped by conditions, done.']);
     
 else
     error('Unknown inputs');
 end
 
-% Goodbye message
-disp([mfilename ': done.']);
 
 function save_raw(ftxt, eda, fs, edr)
 %--------------------------------------------------------------------------

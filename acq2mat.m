@@ -1,62 +1,96 @@
-function varargout = acq2mat(acqfile, acqpath)
+function varargout = acq2mat(acqfile, acqpath, chans, plotOK, saveOK)
 % ACQ2MAT Convert Acknowledge (.acq) to Matlab (.mat) file format.
 %   ACQ2MAT(acqfile, acqpath)
 %
 % Optional input arguments:
 %   acqfile - ACQ file name
 %   acqpath - ACQ path name
+%   chans    - vector channels to read (e.g., [1:2 4];
+%              default: all). Might be required to very large data
+%              matrix (Avoid 'Out of memory' error).
+%   plotOK   - plot data (boolean)
+%   saveOK   - save data to file (boolean)
 %
 % Optional output arguments:
 %   data - m-by-n matrix of data from m channels and n samples
 %   fs   - sampling rate (Hz)
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 15-11-2010 Mateus Joffily
 
-% Display data? 1=yes; 0=no
-dispout=1;
-
-if nargin == 0
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Select ACQ file to convert
-    pathname='.';
-    cwd=pwd;
-    cd(pathname);
-    [acqfile, acqpath] = uigetfile('*.acq', 'Pick an ACQ-file');
-    cd(cwd);
+if ~exist('acqfile', 'var') || isempty(acqfile) || ...
+   ~exist('acqpath', 'var') || isempty(acqpath)
+    % Select VHDR file to convert
+    [acqfile, acqpath] = uigetfile(...
+        {'*.acq',  'BIOPAC Acknowledge File (*.acq)'; ...
+         '*.*', 'All Files (*.*)'}, ...
+        'Select BIOPAC Acknowledge File');
+    
+    if isequal(acqfile,0)
+        % If cancelled, return
+        return
+    end
 end
 
+if ~exist('chans', 'var') || isempty(chans)
+    chans = [];
+end
+if ~exist('plotOK', 'var') || isempty(plotOK)
+    plotOK = true;
+end
+if ~exist('saveOK', 'var') || isempty(saveOK)
+    saveOK = true;
+end
+
+% Read .acq data
+%--------------------------------------------------------------------------
 acq = load_acq( fullfile(acqpath, acqfile) );
 
-data = acq.data;
-fs = 1 / (acq.hdr.graph.sample_time * 10^-3);  % Use with caution!
+if isempty(chans)
+    chans = 1:size(acq.data, 2);
+end
 
-% Show data graphs
-if dispout
-    Nchans=size(data, 1);
+% Get dataset and sampling rate
+data = acq.data(:,chans)';  % transpose data
+fs = 1 / (acq.hdr.graph.sample_time * 10^-3);
+
+% Free memory space (important for too large data matrix)
+acq.data = [];
+
+% Plot data
+%--------------------------------------------------------------------------
+if plotOK
+    nChans = size(data, 1);
     figure('Name', acqfile);
-    for n=1:Nchans
-        ax(n)=subplot(Nchans,1,n);
-        plot( (0:size(data,2)-1) / fs, data(n,:));
+    ax = zeros(1, nChans);
+    for n = 1:nChans
+        ax(n)=subplot(nChans,1,n);
+        plot((0:size(data,2)-1)/fs, data(n,:));
         title(sprintf('Channel %d', n));
     end
     linkaxes(ax, 'x');
 end
 
 % Save data to .mat file
-[matpath,matfile,ext,versn] = fileparts(fullfile(acqpath, acqfile));
+%--------------------------------------------------------------------------
+if saveOK
+    [matpath, matfile] = fileparts(fullfile(acqpath, acqfile));
 
-if exist([matpath '\' matfile '.mat'], 'file')
-    answer=questdlg(sprintf('%s.mat already exists! Do you want to replace it?', matfile), ...
-        'Yes', 'No');
-    if strcmp(answer, 'Yes')
-        save([matpath '\' matfile], 'data', 'fs');
+    fmat = fullfile(matpath, [matfile '.mat']);
+    if exist(fmat, 'file')
+        answer = questdlg( ...
+           sprintf('%s.mat already exists! Do you want to replace it?', ...
+                matfile), 'Yes', 'No');
+        if strcmp(answer, 'Yes')
+            save(fmat, 'data', 'fs');
+        end
+    else
+        save(fmat, 'data', 'fs');
     end
-else
-    save(fullfile(matpath, matfile), 'data', 'fs');
 end
 
-% Set outputs
+% Set output variables
+%--------------------------------------------------------------------------
 switch nargout
     case 1
         varargout{1} = data;

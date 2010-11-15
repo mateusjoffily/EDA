@@ -1,4 +1,4 @@
-function [edaout filtout] = eda_filt(edain, fs, filtin, plotOK)
+function varargout = eda_filt(edain, fs, filtin, opendlg, plotOK)
 % EDA_FILT Electrodermal Activity (EDA) filters
 %   [edaout filtout] = EDA_FILT(edain, fs, filtin, plotOK)
 %
@@ -7,39 +7,84 @@ function [edaout filtout] = eda_filt(edain, fs, filtin, plotOK)
 %    fs    - samplig frequency (Hz)
 %
 % Optional input arguments:
-%    filtin - (1) 'default' - use defalut SC filter params
-%             (2) structure array containing pre-defined filter parameters 
-%                 (see filt_main.m)
-%    plotOK - display results (boolean)
+%    filtin  - (1) 'default' - use defalut SC filter params
+%              (2) structure array containing pre-defined filter parameters 
+%                  (see filt_main.m)
+%    opendlg - open dialog box (boolean)
+%    plotOK  - display results (boolean)
 %
-% Output arguments:
+% Optional output arguments:
 %    edaout  - 1-by-n vector of EDA samples filtered
 %    filtout - structure array containing EDA specific filter parameters
 %              (see filt_main.m)
 % _________________________________________________________________________
 
-% Last modified 10-11-2010 Mateus Joffily
+% Last modified 13-11-2010 Mateus Joffily
+
+% Default filter parameters for EDA: Butterworth low-pass
+% filter with cut-off frequency at 0.5Hz
+filtdef.name = 'butter';  % Butterworth filter
+filtdef.type = 'low';     % low-pass filter
+filtdef.n = 5;            % filter order
+filtdef.fc = 1;         % cutoff frequency (Hz)
 
 % Display frequence response and filtered signal
-if nargin < 4, plotOK = false; end
+if nargin < 5, plotOK = false; end
 
-if nargin >= 3 && isempty(filtin)
-    filtin(1).name = 'none';
-    
-elseif nargin < 3 || ischar(filtin) && strcmp(filtin, 'default')
+if nargin < 4, opendlg = false; end
+
+if nargin < 3 || isempty(filtin) || ...
+   ischar(filtin) && strcmp(filtin, 'default')
     clear filtin;
-    % Default filter parameters for EDA: Butterworth low-pass 
-    % filter with cut-off frequency at 0.5Hz
-    filtin(1).name = 'butter';  % Butterworth filter 
-    filtin(1).type = 'low';     % low-pass filter 
-    filtin(1).n = 5;            % filter order
-    filtin(1).fc = 1;         % cutoff frequency (Hz)
+    % Set filterin to default
+    filtin = filtdef;
+    
+end
+
+if isempty(fs)
+    % return filter parameters
+    varargout{1} = filtin;
+    return
+end
+
+if opendlg 
+    % Open GUI
+    prompt={'Name', ...
+            'Type', ...
+            'Order', ...
+            'Cutoff frequency (Hz)'};
+     def={sprintf('%s', filtin(1).name), ...
+          sprintf('%s', filtin(1).type), ...
+          sprintf('%d', filtin(1).n), ...
+          sprintf('%.04f', filtin(1).fc)};
+    dlgTitle='Set filter parameters';
+    lineNo=1;
+    answer=inputdlg(prompt,dlgTitle,lineNo,def);
+
+    if ~isempty(answer) && ~( isempty(answer{1}) || ...
+            isempty(answer{2}) || isempty(answer{3}) || isempty(answer{4}))
+        % user defined threshold values
+        filtin(1).name = answer{1};
+        filtin(1).type = answer{2};
+        filtin(1).n = str2double(answer{3});
+        filtin(1).fc = str2double(answer{4});
+        
+    else
+        % Set varargout
+        if nargout >= 1
+            varargout{1} = [];
+        end
+        if nargout == 2
+            varargout{2} = [];
+        end
+        return
+    end
 end
 
 % Filter EDA
 [edaout filtout] = filt_main(edain, fs, filtin, plotOK);
 
-% Noise
+% Residual
 noise = edain - edaout;
 
 % Plot filtered signal
@@ -48,12 +93,8 @@ if plotOK
     
     % Plot EDA raw power spectrum
     figure('Color', 'w');
-    [PSin,fin] = pwelch(edain-mean(edain),[],[],[],fs);
-    plot(fin,PSin);
-    xlabel('Frequency (Hz)');
-    ylabel('Power Spectrum');
-    set(gca, 'XLim', [0 0.25]);
-    title('EDA Raw');
+    pwelch(edain-mean(edain),[],[],[],fs);
+    title('Welch Power Spectral Density Estimate (EDA Raw)');
    
     % Plot EDA filtered + noise
     figure('Color', 'w');
@@ -69,6 +110,16 @@ if plotOK
     title(s);
     legend('EDA Raw', 'EDA Filtered');
 end
+
+% Set varargout
+if nargout >= 1
+    varargout{1} = edaout;
+end
+if nargout == 2
+    varargout{2} = filtout;
+end
+
+ 
 
 % Goodbye message
 disp([mfilename ': done.']);

@@ -1,11 +1,13 @@
-function conds = eda_conditions(eda, fs, fcond, edr)
+function conds = eda_conditions(eda, fs, xconds, edr)
 % EDA_CONDITIONS Event related EDR and EDL
-%   conds = EDA_CONDITIONS(eda, fs, fcond, edr)
+%   conds = EDA_CONDITIONS(eda, fs, xconds, edr)
 %
 % Required input arguments:
 %    eda   - 1-by-n vector of EDA samples
 %    fs    - samplig frequency (Hz)
-%    fcond - This *.mat file must include the following cell arrays (each
+%    xconds - Can be the fullpath for a *.mat file or a pre-filled conds
+%            structure array (see below).
+%            The *.mat file must include the following cell arrays (each
 %            1xn): names, onsets and durations. e.g. names=cell(1,5),
 %            onsets=cell(1,5), durations=cell(1,5), then names{2}='cond2',
 %            onsets{2}=[10 40 70 100 130], durations{2}=[0 0 0 0 0].
@@ -28,34 +30,48 @@ function conds = eda_conditions(eda, fs, fcond, edr)
 % and 'event onset time'.
 % _________________________________________________________________________
 
-% Last modified 10-11-2010 Mateus Joffily
+% Last modified 14-11-2010 Mateus Joffily
 
 % Default EDR onset latency window (seconds)
 latency_def = [1 3];
 
-if nargin < 4
-    % Initialize edr, if it hasn't been provided
-    edr = struct('iPeaks', [], 'iValleys', [], ...
-                 'type', struct('v', [], 'p', []), 'thresh', []);
-end
+% Initialize conds structure
+conds = struct('name', {}, 'onsets', {}, 'durations', {}, ...
+              'latency_wdw', {}, 'iEDR', {}, 'N', [], ...
+              'edl', struct('v', [], 't', []));
 
-% If conditions file doesn't exist, return
-if ~exist(sprintf('%s', fcond), 'file')
-    conds = [];
+if nargin < 3
     return
 end
 
-% Load 'names', 'onsets' and 'conditions'
-load(fcond, 'names', 'onsets', 'durations');
+if nargin < 4
+    % Initialize edr, if it hasn't been provided
+    edr = eda_edr;
+end
 
-% Initialize conds structure
-conds = struct('name', names, 'onsets', onsets, 'durations', durations, ...
-              'latency_wdw', [], 'iEDR', [], 'N', [], ...
-              'edl', struct('v', [], 't', []));
+if ischar(xconds)     % If xconds is a string, probably a filename
+    % save a copy of filename
+    fcond = xconds;
+    
+    % If conditions file doesn't exist, return
+    if ~exist(sprintf('%s', fcond), 'file')
+        return
+    end
+
+    % Load 'names', 'onsets' and 'conditions'
+    load(fcond, 'names', 'onsets', 'durations');
+    
+    xconds = struct('name', names, 'onsets', onsets, 'durations', durations);
+end
 
 % Loop over conditions
-for nC = 1:length(conds)
-
+for nC = 1:length(xconds)
+    
+    % Set name, onsets and durations for condition
+    conds(nC).name      = xconds(nC).name;
+    conds(nC).onsets    = xconds(nC).onsets;
+    conds(nC).durations = xconds(nC).durations;
+    
     % If the durations are identical for all events
     if length(conds(nC).durations) == 1
         conds(nC).durations = repmat(conds(nC).durations, size(conds(nC).onsets));

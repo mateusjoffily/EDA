@@ -11,7 +11,6 @@ function edr = eda_edr(varargin)
 %   fs  - EDA sampling rate (Hz) 
 %
 % Optional Input arguments:
-%   opendlg - open dialog box (boolean)
 %   thrin   - structure array with fields:
 %       amp      - user defined amplitude threshold (microSiemens) 
 %                  'amp' is a struct with fields 'min' and 'max'
@@ -20,18 +19,19 @@ function edr = eda_edr(varargin)
 %       risetime - user defined rise time threshold (s)
 %                  'risetime' is a struct with fields 'min' and 'max'
 %       overlap  - detect overlapping EDRs (boolean)                  
+%   opendlg - open dialog box (boolean)
 %   plotOK - plot results (boolean)
 %
 % Output arguments:
 %   edr - structure array with fields:
-%       edr.iPeaks     - EDR peaks index in EDA vector 
-%       edr.iValleys   - EDR valleys index in EDA vector 
-%       edr.type - EDR type, according to Bucsein (1992, p.136) terminology:
+%       iPeaks     - EDR peaks index in EDA vector 
+%       iValleys   - EDR valleys index in EDA vector 
+%       type - EDR type, according to Bucsein (1992, p.136) terminology:
 %             (1) - single response (ideal), it never occurs
 %             (2) - response overlaps preceding response during recovery time
 %             (3) - response overlaps preceding response during rise time
 %             (4) - response manually detected by the user (set only by eda_gui.m)
-%       edr.thresh  - EDR detection thresholds used:
+%       thresh  - EDR detection thresholds used:
 %           amp      - [uSiemens] amplitude threshold
 %                    'amp' is a struct that contains fields 'min' and 'max'
 %           slope    - [uSiemens/s] slope threshold range
@@ -47,54 +47,57 @@ function edr = eda_edr(varargin)
 %   Boucsein (1992) Electrodermal Activity, Plenum Press (Ed.), New York.
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 14-11-2010 Mateus Joffily
 
 % Threshold default values
-thresh_def.amp.min = 0.02;      % EDR amplitude minimum value
-thresh_def.amp.max = Inf;       % EDR amplitude maximum value
-thresh_def.slope.min = 0.0;     % EDR slope minimum value
-thresh_def.slope.max = Inf;     % EDR slope maximum value
-thresh_def.risetime.min = 0;    % EDR risetime minimum value
-thresh_def.risetime.max = Inf;  % EDR risetime maximum value
-thresh_def.overlap = 1;         % Detect EDRs overlapping
+thresh_def.amp.min      = 0.02;  % EDR amplitude minimum value
+thresh_def.amp.max      = Inf;   % EDR amplitude maximum value
+thresh_def.slope.min    = 0.0;   % EDR slope minimum value
+thresh_def.slope.max    = Inf;   % EDR slope maximum value
+thresh_def.risetime.min = 0;     % EDR risetime minimum value
+thresh_def.risetime.max = Inf;   % EDR risetime maximum value
+thresh_def.overlap      = false; % Detect EDRs overlapping
 
-% Initialize edr
+% Empty threshold structure
+minmax = struct('min', {}, 'max', {});
+thresh_empty = struct('amp', minmax, 'slope', minmax, ...
+                      'risetime', minmax, 'overlap', {});
+
+% Initialize edr structure
 edr = struct('iPeaks', [], 'iValleys', [], ...
-             'type', struct('v', [], 'p', []), 'thresh', thresh_def);
+             'type', struct('v', [], 'p', []), 'thresh', thresh_empty);
 
-% Check input arguments
-if nargin == 2
-    eda = varargin{1};
-    fs = varargin{2};
-    opendlg = false;
-    plotOK = false;
-    
-elseif nargin > 2
-    eda = varargin{1};
-    fs = varargin{2};
-    
-    if ~isempty(varargin{3})
-        opendlg = varargin{3};
-    else
-        opendlg = false;
-    end
-    
-    if ~isempty(varargin{4})
-        edr.thresh = varargin{4};
-    end
-    
-    if nargin == 5
-        plotOK = varargin{5};
-    end
-    
-else
-    edr = [];
+% Check number of input arguments
+if nargin < 2
     return
+end
+
+% Set initial values
+eda = varargin{1};
+fs = varargin{2};
+opendlg = false;
+plotOK = false;
+    
+if nargin < 3
+    edr.thresh = thresh_def;
+else
+    if isstruct(varargin{3})
+        edr.thresh = varargin{3};
+    else
+        edr.thresh = thresh_def;
+    end
+end
+    
+if nargin >= 4 && ~isempty(varargin{4})
+    opendlg = varargin{4};
+end
+    
+if nargin >= 5 && ~isempty(varargin{5})
+    plotOK = varargin{5};
 end
 
 if opendlg 
     % Open GUI
-    
     prompt={'Amplitude minimum (uSiemens)', ...
             'Amplitude maximum (uSiemens)', ...
             'Slope minimum (uSiemens/s)', ...
@@ -102,13 +105,23 @@ if opendlg
             'Risetime minimum (s)', ...
             'Risetime maximum (s)', ...
             'Detect overlapped responses (no = 0, yes = 1)'};
-     def={sprintf('%.04f', edr.thresh.amp.min), ...
-          sprintf('%.04f', edr.thresh.amp.max), ...
-          sprintf('%.04f', edr.thresh.slope.min), ...
-          sprintf('%.04f', edr.thresh.slope.max), ...
-          sprintf('%.04f', edr.thresh.risetime.min), ...
-          sprintf('%.04f', edr.thresh.risetime.max), ...
-          sprintf('%d', edr.thresh.overlap)};
+    if isempty(edr.thresh)
+        def={sprintf('%.04f', thresh_def.amp.min), ...
+            sprintf('%.04f',  thresh_def.amp.max), ...
+            sprintf('%.04f',  thresh_def.slope.min), ...
+            sprintf('%.04f',  thresh_def.slope.max), ...
+            sprintf('%.04f',  thresh_def.risetime.min), ...
+            sprintf('%.04f',  thresh_def.risetime.max), ...
+            sprintf('%d',     thresh_def.overlap)};
+    else
+        def={sprintf('%.04f', edr.thresh.amp.min), ...
+            sprintf('%.04f',  edr.thresh.amp.max), ...
+            sprintf('%.04f',  edr.thresh.slope.min), ...
+            sprintf('%.04f',  edr.thresh.slope.max), ...
+            sprintf('%.04f',  edr.thresh.risetime.min), ...
+            sprintf('%.04f',  edr.thresh.risetime.max), ...
+            sprintf('%d',     edr.thresh.overlap)};
+    end
     dlgTitle='Set EDR thresholds';
     lineNo=1;
     answer=inputdlg(prompt,dlgTitle,lineNo,def);
@@ -118,33 +131,35 @@ if opendlg
             isempty(answer{4}) || isempty(answer{5}) || ...
             isempty(answer{6}) || isempty(answer{7}))
         % user defined threshold values
-        edr.thresh.amp.min = str2double(answer{1});
-        edr.thresh.amp.max = str2double(answer{2});
-        edr.thresh.slope.min = str2double(answer{3});
-        edr.thresh.slope.max = str2double(answer{4});
-        edr.thresh.risetime.min = str2double(answer{5});
-        edr.thresh.risetime.max = str2double(answer{6});
-        edr.thresh.overlap = str2double(answer{7});
+        edr.thresh(1).amp.min = str2double(answer{1});
+        edr.thresh(1).amp.max = str2double(answer{2});
+        edr.thresh(1).slope.min = str2double(answer{3});
+        edr.thresh(1).slope.max = str2double(answer{4});
+        edr.thresh(1).risetime.min = str2double(answer{5});
+        edr.thresh(1).risetime.max = str2double(answer{6});
+        edr.thresh(1).overlap = str2double(answer{7});
         
         if ~ ( (edr.thresh.amp.min < edr.thresh.amp.max) && ...
                 (edr.thresh.slope.min < edr.thresh.slope.max) && ...
                 (edr.thresh.risetime.min < edr.thresh.risetime.max) )
             warndlg('Min must be lower than Max', dlgTitle);
-            edr.thresh = [];
+            edr.thresh = thresh_empty;
             return
         end
 
         if edr.thresh.overlap ~= 0 && edr.thresh.overlap ~= 1
             warndlg('"Split overlapped responses" must be 0 or 1', dlgTitle);
-            edr.thresh = [];
+            edr.thresh = thresh_empty;
             return
         end
-    else
-        edr.thresh = [];
-        return
     end
 end
 
+if isempty(edr(1).thresh)
+    % If threshold structure is empty, return
+    return
+end
+    
 % Detect responses' valleys-peaks
 %--------------------------------------------------------------------------
 

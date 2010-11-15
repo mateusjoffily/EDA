@@ -1,12 +1,20 @@
-function varargout = vhdr2mat(vhdrfile, vhdrpath)
+function varargout = vhdr2mat(vhdrfile, vhdrpath, srange, chans, plotOK, saveOK)
 % VHDR2MAT Convert BrainAmp Vis. Rec. (.vhdr) to Matlab (.mat) file format.
 %   VHDR2MAT(vhdrfile, vhdrpath)
 %
-% Optional input arguments:
+% Optional inputs:
 %   vhdrfile - VHDR file name 
 %   vhdrpath - VHDR path name 
+%   srange   - scalar first sample to read (up to end of file) or
+%              vector first and last sample to read (e.g., [7 42];
+%              default: all)
+%   chans    - vector channels to read (e.g., [1:2 4];
+%              default: all). Might be required to very large data
+%              matrix (Avoid 'Out of memory' error).
+%   plotOK   - plot data (boolean)
+%   saveOK   - save data to file (boolean)
 %
-% Optional output arguments:
+% Optional outputs:
 %   data   - m-by-n matrix of data (m channels by n samples)
 %   fs     - sampling rate (Hz)
 %   event  - struture array of EEG.event from .vhdr file
@@ -15,57 +23,113 @@ function varargout = vhdr2mat(vhdrfile, vhdrpath)
 %   - EEGLAB software installed (http://sccn.ucsd.edu/eeglab/)
 % _________________________________________________________________________
 
-% Last modified 09-11-2010 Mateus Joffily
+% Last modified 15-11-2010 Mateus Joffily
 
-% Display data? 1=yes; 0=no
-dispout=1;
-
-if nargin == 0
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~exist('vhdrfile', 'var') || isempty(vhdrfile) || ...
+   ~exist('vhdrpath', 'var') || isempty(vhdrpath)
     % Select VHDR file to convert
-    [vhdrfile, vhdrpath] = uigetfile('*.vhdr', 'Select VHDR file');
+    [vhdrfile, vhdrpath] = uigetfile( ...
+        {'*.vhdr', 'BrainAmp Vis. Rec. File (*.vhdr)'; ...
+         '*.*', 'All Files (*.*)'}, ...
+        'Select BrainAmp Vis. Rec. File');
+    
+    if isequal(vhdrfile,0)
+        % If cancelled, return
+        return
+    end
+end
+
+if ~exist('srange', 'var') || isempty(srange)
+    srange = [];
+end
+if ~exist('chans', 'var') || isempty(chans)
+    chans = [];
+end
+if ~exist('plotOK', 'var') || isempty(plotOK)
+    plotOK = true;
+end
+if ~exist('saveOK', 'var') || isempty(saveOK)
+    saveOK = true;
 end
 
 % Read .vhdr data
-[EEG, com] = pop_loadbv(vhdrpath, vhdrfile);
+%--------------------------------------------------------------------------
+EEG = pop_loadbv(vhdrpath, vhdrfile, srange, chans);
+
+% Allocate memory space for data
+nChans = size(EEG.data,1);
+data = zeros(nChans+1, size(EEG.data,2));
 
 % Get dataset and sampling rate
-data = EEG.data;     % data
-fs = EEG.srate;      % Sampling freq.
+data(1:nChans,:) = EEG.data;     % data
+fs               = EEG.srate;      % sampling rate
 
-% Save triggers: combine all events
-% data(end+1, [EEG.event(:).latency]) = 1;
+% Free memory space (important for too large data matrix)
+EEG.data = [];
 
-% Show data graphs
-if dispout
-    Nchans=size(data, 1);
+% Add trigger events at the last row of data matrix
+%--------------------------------------------------------------------------
+% Check for overlapping events
+[B,i,j] = unique([EEG.event(:).latency]);
+if length(i) ~= length(j)
+    idx = find(diff([0 i]) > 1);
+    disp('Warning: time coincident events overlapped in triggers channel.');
+    disp(strcat('event', num2str(i(idx)'), ':', ...
+                char({EEG.event(idx).type}), ' <-> ', ...
+                char({EEG.event(idx+1).type})));
+end
+
+% Unique events names
+event_names = unique({EEG.event(:).type});
+
+% Each event is coded as its type number
+for iE = 1:numel(event_names)
+    if strcmp(event_names{iE}, 'Sync On') || ...
+       strcmp(event_names{iE}, 'boundary')
+        % Ignore 'Sync On' and 'boundary' events
+        continue;
+    end
+    idx = strcmp({EEG.event(:).type}, event_names{iE});
+    data(end, [EEG.event(idx).latency]) = str2double(event_names{iE}(2:end));
+end
+
+% Plot data
+%--------------------------------------------------------------------------
+if plotOK
+    nChans = size(data, 1);
     figure('Name', vhdrfile);
-    for n=1:Nchans
-        ax(n)=subplot(Nchans,1,n);
+    ax = zeros(1, nChans);
+    for n = 1:nChans
+        ax(n)=subplot(nChans,1,n);
         plot((0:size(data,2)-1)/fs, data(n,:));
         title(sprintf('Channel %d', n));
     end
     linkaxes(ax, 'x');
 end
 
-% Rename EEG event
-event = EEG.event;
-
 % Save data to .mat file
-[matpath,matfile,ext,versn] = fileparts(fullfile(vhdrpath, vhdrfile));
+%--------------------------------------------------------------------------
+if saveOK
+    [matpath, matfile] = fileparts(fullfile(vhdrpath, vhdrfile));
 
-fmat = fullfile(matpath, [matfile '.mat']);
-if exist(fmat, 'file')
-    answer=questdlg(sprintf('%s.mat already exists! Do you want to replace it?', matfile), ...
-        'Yes', 'No');
-    if strcmp(answer, 'Yes')
+    % Rename EEG event
+    event = EEG.event;
+
+    fmat = fullfile(matpath, [matfile '.mat']);
+    if exist(fmat, 'file')
+        answer = questdlg( ...
+           sprintf('%s.mat already exists! Do you want to replace it?', ...
+                matfile), 'Yes', 'No');
+        if strcmp(answer, 'Yes')
+            save(fmat, 'data', 'fs', 'event');
+        end
+    else
         save(fmat, 'data', 'fs', 'event');
     end
-else
-    save(fmat, 'data', 'fs', 'event');
 end
 
-% Set outputs
+% Set output variables
+%--------------------------------------------------------------------------
 switch nargout 
     case 1
         varargout{1} = data;

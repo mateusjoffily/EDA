@@ -1,15 +1,15 @@
-function [eda fs] = eda_downsample(eda, fs, M)
+function [eda fsact] = eda_downsample(eda, fs, fsreq)
 % EDA_DOWNSAMPLE EDA downsample
-%   [edaout fsout] = EDA_DOWNSAMPLE(edain, fsin, M)
+%   [edaout fsact] = EDA_DOWNSAMPLE(edain, fs, newfs)
 %
 % Required input arguments:
-%    eda  - 1-by-n vector of EDA samples
-%    fs   - orginal samplig frequency (Hz)
-%    M    - downsampling factor
+%    eda     - 1-by-n vector of EDA samples
+%    fs      - orginal samplig frequency (Hz)
+%    fsreq   - request new sampling frequency (Hz)
 %
 % Output arguments:
-%    eda  - downsampled EDA data
-%    fs   - new sampling rate (Hz)
+%    eda     - downsampled EDA data
+%    fsact   - actual new sampling rate (Hz)
 %
 % Description: 
 %    Use only if EDA has been acquired with very high sampling rate 
@@ -18,7 +18,7 @@ function [eda fs] = eda_downsample(eda, fs, M)
 %    filtering EDA (see eda_filt.m).
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 18-11-2010 Mateus Joffily
 
 % Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
 %
@@ -36,7 +36,7 @@ function [eda fs] = eda_downsample(eda, fs, M)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-if nargin < 3 || isempty(M)
+if nargin < 3 || isempty(fsreq)
     prompt   = {'Enter new sampling rate (Hz)'};
     def      = {sprintf('%.02f', fs)};
     dlgTitle = 'Downsample EDA';
@@ -44,8 +44,7 @@ if nargin < 3 || isempty(M)
     answer   = inputdlg(prompt,dlgTitle,lineNo,def);
 
     if ~isempty(answer) && ~isempty(answer{1})
-        % Calculate downsampling factor
-        M = ceil( fs / str2double(answer{1}) );
+        fsreq = str2double(answer{1});
         
     else
         % Goodbye message
@@ -55,9 +54,12 @@ if nargin < 3 || isempty(M)
     end    
 end
 
+% Calculate downsampling factor
+M = ceil( fs / fsreq );
+
 if M > 1
     eda = eda(:, 1:M:end);
-    fs  = fs / M;
+    fsact  = fs / M;
 end
 
 % Goodbye message

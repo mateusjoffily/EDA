@@ -1,6 +1,6 @@
-function conds = eda_conditions(eda, fs, xconds, edr)
+function conds = eda_conditions(eda, fs, xconds, edr, latency_range, opendlg)
 % EDA_CONDITIONS Event related EDR and EDL
-%   conds = EDA_CONDITIONS(eda, fs, xconds, edr)
+%   conds = EDA_CONDITIONS(eda, fs, xconds, edr, latency_range, opendlg)
 %
 % Required input arguments:
 %    eda   - 1-by-n vector of EDA samples
@@ -16,21 +16,26 @@ function conds = eda_conditions(eda, fs, xconds, edr)
 %            are identical for all events.
 %    edr   - structure array  of electrodermal response (EDR) (see eda_edr.m)
 %
+% Optonal input arguments:
+%    latency_range - 1-by-2 vector of onset latency range [min max] in  
+%                    seconds. Event-related EDR onset latency is measured 
+%                    as the difference between 'valley time' and the 'event 
+%                    onset time'. Event-related EDRs must have its onset 
+%                    latency within the onset latency range defined here. The
+%                    default value is [1 3] (see latency_def in the code).
+%    opendlg - open dialog box (boolean)
+%
 % Output arguments:
 %    conds  - structure array of EDR and EDL grouped by conditions
 %
 % Event related EDR criteria: 
 %    (1) if event duration is zero, event-related EDRs onset latency is
-%        between latency_def(1) and latency_def(2); 
+%        between latency_range(1) and latency_range(2); 
 %    (2) if event duration is greater than zero, event-related EDRs onset 
-%        latency is between latency_def(1) and 'duration'. 
-%
-% See below for latency_def definition. Default latency_def is [1 3].
-% EDR onset latency is measured as the difference between 'valley time' 
-% and 'event onset time'.
+%        latency is between latency_range(1) and 'duration'. 
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 18-11-2010 Mateus Joffily
 
 % Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
 %
@@ -53,15 +58,16 @@ latency_def = [1 3];
 
 % Initialize conds structure
 conds = struct('name', {}, 'onsets', {}, 'durations', {}, ...
-              'latency_wdw', {}, 'iEDR', {}, 'N', [], ...
-              'edl', struct('v', [], 't', []));
+              'latency_wdw', {}, 'latency_range', [], 'iEDR', {}, ...
+              'N', [], 'edl', struct('v', [], 't', []));
 
 if nargin < 3
+    % If missing inputs, return
     return
 end
 
 if nargin < 4
-    % Initialize edr, if it hasn't been provided
+    % Initialize edr
     edr = eda_edr;
 end
 
@@ -77,16 +83,63 @@ if ischar(xconds)     % If xconds is a string, probably a filename
     % Load 'names', 'onsets' and 'conditions'
     load(fcond, 'names', 'onsets', 'durations');
     
-    xconds = struct('name', names, 'onsets', onsets, 'durations', durations);
+    xconds = struct('name', names, 'onsets', onsets, ...
+                    'durations', durations);
+
+end
+
+if nargin < 5 || ( nargin >= 5 && isempty(latency_range) )
+    % Set latency range default...
+    if ~isempty(xconds) && isfield(xconds(1), 'latency_range') && ...
+       ~isempty(xconds(1).latency_range)
+        % ... to previously used value
+        latency_range = xconds(1).latency_range;
+    else
+        % ... to default value
+        latency_range = latency_def;
+    end
+end
+
+if nargin > 5 && opendlg 
+    % Open GUI
+    prompt={'Minimum', ...
+            'Maximum'};
+    def={sprintf('%.04f', latency_range(1)), ...
+         sprintf('%.04f',  latency_range(2))};
+    dlgTitle='Set EDR onset latency range';
+    lineNo=[1 50];
+    answer=inputdlg(prompt,dlgTitle,lineNo,def);
+
+    if ~isempty(answer) && ~( isempty(answer{1}) || isempty(answer{2}))
+        % user defined threshold values
+        latency_range(1) = str2double(answer{1});
+        latency_range(2) = str2double(answer{2});
+    else
+        return
+    end
+end
+
+% Check onset latency range consistency
+if latency_range(1) > latency_range(2)
+    dlgTitle='Set EDR onset latency range';
+    msg = sprintf('Minimum value must be lower than Maximum value.\n');
+    msg = sprintf('%sDefault EDR onset latency range [%0.2f %0.2f] will be used.', ...
+                   msg, latency_def(1), latency_def(2));
+    warndlg(msg, dlgTitle);
+    latency_range = latency_def;
 end
 
 % Loop over conditions
 for nC = 1:length(xconds)
     
     % Set name, onsets and durations for condition
-    conds(nC).name      = xconds(nC).name;
-    conds(nC).onsets    = xconds(nC).onsets;
-    conds(nC).durations = xconds(nC).durations;
+    conds(nC).name          = xconds(nC).name;
+    conds(nC).onsets        = xconds(nC).onsets;
+    conds(nC).durations     = xconds(nC).durations;
+    
+    % Set onset latency range for condition (note: it will be the
+    % same for every condition)
+    conds(nC).latency_range = latency_range;
     
     % If the durations are identical for all events
     if length(conds(nC).durations) == 1
@@ -99,9 +152,9 @@ for nC = 1:length(xconds)
         % EDR
         %------------------------------------------------------------------
         % Set analysis window for current event
-        conds(nC).latency_wdw(1,nE) = conds(nC).onsets(nE) + latency_def(1);
+        conds(nC).latency_wdw(1,nE) = conds(nC).onsets(nE) + latency_range(1);
         if conds(nC).durations(nE) == 0 
-            conds(nC).latency_wdw(2,nE) = conds(nC).onsets(nE) + latency_def(2);
+            conds(nC).latency_wdw(2,nE) = conds(nC).onsets(nE) + latency_range(2);
         else
             conds(nC).latency_wdw(2,nE) = conds(nC).onsets(nE) + ...
                                  conds(nC).durations(nE);

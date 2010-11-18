@@ -18,15 +18,15 @@ function varargout = eda_gui(varargin)
 %    Export variables menu in the top of the window to export changes to 
 %    MATLAB environment, before exiting. Conditions file (see
 %    eda_conditions.m) can also be loaded for inspection in the GUI and EDL
-%    measurement. Use File > Load conditions menu for loading conditions
-%    *.mat file. Conditions (shaded area) displayed in the GUI may 
+%    measurement. Use the menu "File > Import from File > Conditions" to load
+%    conditions *.mat file. Conditions (shaded area) displayed in the GUI may 
 %    correspond the EDR onset latency criterion used by eda.conditions.m to 
 %    relate EDR to specific events or the duration of the event itself. 
 %    Use Data > Coditions > Shade menu to select between these two display 
 %    modes.
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 18-11-2010 Mateus Joffily
 
 % EDA_GUI M-file for eda_gui.fig
 %      EDA_GUI, by itself, creates a new EDA_GUI or raises the existing
@@ -682,7 +682,8 @@ function toolbar_save_figure_ClickedCallback(hObject, eventdata, data)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[fname, fpath] = uiputfile({'*.fig', 'MATLAB Figure (*.fig)'}, 'Save as');
+[fname, fpath] = uiputfile({'*.fig', 'MATLAB Figure (*.fig)'; ...
+                            '*.*', 'All Files (*.*)'}, 'Save as');
 
 if isequal(fname,0)
    return
@@ -833,7 +834,7 @@ if nargin == 0
 else
     % Otherwise import new conditions from file
     data.conds = eda_conditions(data.new.eda, data.new.fs, ...
-                                fconds, data.new.edr);
+                                fconds, data.new.edr, [], true);
 end
 
 % Update data structure
@@ -875,7 +876,9 @@ function menu_file_import_file_conds_Callback(hObject, eventdata, data)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[fcond, pcond] = uigetfile('*.mat', 'Select conditions file');
+[fcond, pcond] = uigetfile({'*.mat', 'MATLAB File (*.mat)'; ...
+                            '*.*', 'All Files (*.*)'}, ...
+                            'Select conditions file');
 fcond = fullfile(pcond, fcond);
 
 % If conditions file doesn't exist, return
@@ -1045,7 +1048,8 @@ function menu_file_import_file_data_Callback(hObject, eventdata, data)
 [fname, pname] = uigetfile({'*.vhdr;*.acq;*.mat', 'All File formats (*.vhdr, *.acq, *.mat)'; ...
                             '*.vhdr', 'BrainAmp Vis. Rec. File (*.vhdr)'; ...
                             '*.acq',  'BIOPAC Acknowledge File (*.acq)';
-                            '*.mat',  'MATLAB File (*.mat)'}, 'Select Data file');
+                            '*.mat',  'MATLAB File (*.mat)'; ...
+                            '*.*', 'All Files (*.*)'}, 'Select Data file');
 
 if isequal(fname,0)
    % If cancelled, return
@@ -1175,7 +1179,8 @@ function menu_file_export_file_data_Callback(hObject, eventdata, data)
 % data       structure with handles and user data (see GUIDATA)
 
 % Select file to save Data
-[fname, pname] = uiputfile({'*.mat',  'MATLAB File (*.mat)'}, 'Save Data as');
+[fname, pname] = uiputfile({'*.mat',  'MATLAB File (*.mat)'; ...
+                            '*.*', 'All Files (*.*)'}, 'Save Data as');
 
 if isequal(fname,0)
    return
@@ -1274,7 +1279,8 @@ function menu_file_export_file_results_edr_Callback(hObject, eventdata, data)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'}, 'Save results as...');
+[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'; ...
+                            '*.*', 'All Files (*.*)'}, 'Save results as...');
 
 if isequal(ftxt,0)
    return
@@ -1291,7 +1297,8 @@ function menu_file_export_file_results_conditions_Callback(hObject, eventdata, d
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'}, 'Save results as...');
+[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'; ...
+                          '*.*', 'All Files (*.*)'}, 'Save results as...');
 
 if isequal(ftxt,0)
    return

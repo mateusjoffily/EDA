@@ -191,7 +191,7 @@ edr.type.p = edr.type.v;
 
 % Detect overlapped responses
 %--------------------------------------------------------------------------
-% If accelaratory deflection is found between a reponse's 
+% If accelerating deflection is found between a reponse's 
 % valley-peak pair, treat it as two overlapping responses. 
 % Set reponses' type to 3.
 type3iap = cell(1, nEDR);

@@ -26,7 +26,7 @@ function varargout = eda_gui(varargin)
 %    modes.
 % _________________________________________________________________________
 
-% Last modified 18-11-2010 Mateus Joffily
+% Last modified 22-11-2010 Mateus Joffily
 
 % EDA_GUI M-file for eda_gui.fig
 %      EDA_GUI, by itself, creates a new EDA_GUI or raises the existing
@@ -635,11 +635,15 @@ else
 
 end
 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
+
 % Update Data structure
 guidata(hObject, data);
 
-% Update conditions
-conds_update;
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % update all plots
 eda_gui('all_plot_update');
@@ -819,26 +823,10 @@ uiwait(msgbox(msg, 'About EDA Toolbox'));
 end
 
 % --------------------------------------------------------------------
-function conds_update(fconds)
+function conds_contextmenu_update
 
 % Get data
 data = guidata(gcbf);
-
-% Update conditions
-if nargin == 0
-    % If conditions file is not available as input, update current 
-    % conditions structure
-    data.conds = eda_conditions(data.new.eda, data.new.fs, ...
-                                data.conds, data.new.edr);
-                            
-else
-    % Otherwise import new conditions from file
-    data.conds = eda_conditions(data.new.eda, data.new.fs, ...
-                                fconds, data.new.edr, [], true);
-end
-
-% Update data structure
-guidata(gcbf, data);
 
 % Delete current childrens from conditions plot context menu
 delete(get(data.handles.menu_context_conds, 'Children'));
@@ -876,24 +864,21 @@ function menu_file_import_file_conds_Callback(hObject, eventdata, data)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[fcond, pcond] = uigetfile({'*.mat', 'MATLAB File (*.mat)'; ...
-                            '*.*', 'All Files (*.*)'}, ...
-                            'Select conditions file');
-fcond = fullfile(pcond, fcond);
+% Get updated data
+data = guidata(gcbf);
 
-% If conditions file doesn't exist, return
-if ~exist(sprintf('%s', fcond), 'file')
-    return
-end
+% Import new conditions from file
+data.conds = eda_conditions(data.new.eda, data.new.fs, [], ...
+                            data.new.edr, [], true);
 
-% Update conditions
-conds_update(fcond);
+% Update Data structure
+guidata(hObject, data);
+
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % Update conditions plot
 eda_gui('conds_plot_update');
-
-% Get updated data
-data = guidata(gcbf);
 
 % If conditions structure array not empty
 if ~isempty(data.conds)
@@ -930,11 +915,15 @@ end
 % Auto-detect new EDRs
 data.new.edr = eda_edr(data.new.eda, data.new.fs, data.new.edr.thresh);
 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
+
 % Update data structure
 guidata(hObject, data);
     
-% Update conditions
-conds_update;
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % Update EDA, EDR, EDL, Conditions 
 eda_gui('all_plot_update');
@@ -973,11 +962,15 @@ data.new.fs   = data.old.fs;
 % Auto-detect new EDRs
 data.new.edr = eda_edr(data.new.eda, data.new.fs, data.new.edr.thresh);
 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
+
 % Update Data structure
 guidata(hObject, data);
 
-% Update conditions
-conds_update;
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % Update EDA, EDR and Conditions plots
 eda_gui('all_plot_update');
@@ -1027,11 +1020,15 @@ data.new.fs = fs;
 % Auto-detect new EDRs
 data.new.edr = eda_edr(data.new.eda, data.new.fs, data.new.edr.thresh);
 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
+
 % Update data structure
 guidata(hObject, data);
 
-% Update conditions
-conds_update;
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % Update EDA, EDR, and Conditions plots
 eda_gui('all_plot_update');
@@ -1140,11 +1137,15 @@ if isempty(data.old.eda)
     data.old = data.new;
 end
 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
+
 % Update data structure
 guidata(hObject, data);
 
-% Update conditions
-conds_update;
+% Update conditions contextmenu
+conds_contextmenu_update;
 
 % Update EDA, EDR and Conditions plots
 eda_gui('all_plot_update')
@@ -1279,15 +1280,7 @@ function menu_file_export_file_results_edr_Callback(hObject, eventdata, data)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'; ...
-                            '*.*', 'All Files (*.*)'}, 'Save results as...');
-
-if isequal(ftxt,0)
-   return
-end
-
-eda_save_text(fullfile(ptxt, ftxt), data.new.eda, data.new.fs, ...
-              data.new.edr);
+eda_save_text(data.new.eda, data.new.fs, data.new.edr);
 
 end
 
@@ -1297,15 +1290,7 @@ function menu_file_export_file_results_conditions_Callback(hObject, eventdata, d
 % eventdata  reserved - to be defined in a future version of MATLAB
 % data       structure with handles and user data (see GUIDATA)
 
-[ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'; ...
-                          '*.*', 'All Files (*.*)'}, 'Save results as...');
-
-if isequal(ftxt,0)
-   return
-end
-
-eda_save_text(fullfile(ptxt, ftxt), data.new.eda, data.new.fs, ...
-              data.new.edr, data.conds);
+eda_save_text(data.new.eda, data.new.fs, data.new.edr, data.conds);
 
 end
 

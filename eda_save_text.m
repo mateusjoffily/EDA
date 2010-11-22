@@ -1,16 +1,19 @@
-function eda_save_text(ftxt, eda, fs, edr, conds)
+function eda_save_text(eda, fs, edr, conds, ftxt)
 % EDA_SAVE_TEXT Save EDA results in text file format
 %   EDA_SAVE_TEXT(ftxt, eda, fs, edr, conds)
 %
-% Input arguments:
+% Required input arguments:
 %   eda   - 1-by-n vector of EDA samples
 %   fs    - sampling rate (Hz) 
 %   edr   - structure array of electrodermal response (EDR) (see eda_edr.m)
+%
+% Optional input arguments:
 %   conds - structure array of EDR and EDL grouped by conditions (see 
 %           eda_conditions.m)
+%   ftxt  - output text file name
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 22-11-2010 Mateus Joffily
 
 % Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
 %
@@ -28,26 +31,43 @@ function eda_save_text(ftxt, eda, fs, edr, conds)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-if nargin == 4
+if nargin < 3
+    error('Missing inputs');
+end
+
+if nargin < 4
+    conds = [];
+end
+    
+if nargin < 5
+    [ftxt, ptxt] = uiputfile({'*.txt', 'Text File (*.txt)'; ...
+        '*.*', 'All Files (*.*)'}, 'Save results as...');
+
+    if isequal(ftxt,0)
+        return
+    end
+    
+    ftxt = fullfile(ptxt, ftxt);
+end
+
+if isempty(conds)
     % Save EDR raw results
-    save_raw(ftxt, eda, fs, edr);
+    save_raw(eda, fs, edr, ftxt);
 
     % Goodbye message
     disp([mfilename ': EDR raw results, done.']);
     
-elseif nargin == 5
+else
     % Save EDR grouped by conditions
-    save_grouped(ftxt, eda, fs, edr, conds);
+    save_grouped(eda, fs, edr, conds, ftxt);
     
     % Goodbye message
     disp([mfilename ': EDR/EDL grouped by conditions, done.']);
     
-else
-    error('Unknown inputs');
 end
 
 
-function save_raw(ftxt, eda, fs, edr)
+function save_raw(eda, fs, edr, ftxt)
 %--------------------------------------------------------------------------
 
 % Get EDR statistics
@@ -67,7 +87,7 @@ fprintf(fid, '%0.03f\t%0.03f\t%0.03f\t%0.03f\t%0.03f\t%d\n', ...
 fclose(fid);
 
 
-function save_grouped(ftxt, eda, fs, edr, conds)
+function save_grouped(eda, fs, edr, conds, ftxt)
 
 % Open file
 fid = fopen(ftxt, 'w');

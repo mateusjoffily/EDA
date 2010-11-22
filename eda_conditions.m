@@ -3,18 +3,18 @@ function conds = eda_conditions(eda, fs, xconds, edr, latency_range, opendlg)
 %   conds = EDA_CONDITIONS(eda, fs, xconds, edr, latency_range, opendlg)
 %
 % Required input arguments:
-%    eda   - 1-by-n vector of EDA samples
-%    fs    - samplig frequency (Hz)
+%    eda    - 1-by-n vector of EDA samples
+%    fs     - samplig frequency (Hz)
 %    xconds - Can be the fullpath for a *.mat file or a pre-filled conds
-%            structure array (see below).
-%            The *.mat file must include the following cell arrays (each
-%            1xn): names, onsets and durations. e.g. names=cell(1,5),
-%            onsets=cell(1,5), durations=cell(1,5), then names{2}='cond2',
-%            onsets{2}=[10 40 70 100 130], durations{2}=[0 0 0 0 0].
-%            contain the required details of the second condition. The
-%            duration vectors can contain a single entry if the durations
-%            are identical for all events.
-%    edr   - structure array  of electrodermal response (EDR) (see eda_edr.m)
+%             structure array (see below).
+%             The *.mat file must include the following cell arrays (each
+%             1xn): names, onsets and durations. e.g. names=cell(1,5),
+%             onsets=cell(1,5), durations=cell(1,5), then names{2}='cond2',
+%             onsets{2}=[10 40 70 100 130], durations{2}=[0 0 0 0 0].
+%             contain the required details of the second condition. The
+%             duration vectors can contain a single entry if the durations
+%             are identical for all events.
+%    edr    - structure array  of electrodermal response (EDR) (see eda_edr.m)
 %
 % Optonal input arguments:
 %    latency_range - 1-by-2 vector of onset latency range [min max] in  
@@ -35,7 +35,7 @@ function conds = eda_conditions(eda, fs, xconds, edr, latency_range, opendlg)
 %        latency is between latency_range(1) and 'duration'. 
 % _________________________________________________________________________
 
-% Last modified 18-11-2010 Mateus Joffily
+% Last modified 22-11-2010 Mateus Joffily
 
 % Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
 %
@@ -62,18 +62,29 @@ conds = struct('name', {}, 'onsets', {}, 'durations', {}, ...
               'N', [], 'edl', struct('v', [], 't', []));
 
 if nargin < 3
-    % If missing inputs, return
+    % Return empty CONDS structure array
     return
 end
 
 if nargin < 4
-    % Initialize edr
+    % Initialize edr with empty EDR structure array
     edr = eda_edr;
 end
 
-if ischar(xconds)     % If xconds is a string, probably a filename
-    % save a copy of filename
-    fcond = xconds;
+if ~isstruct(xconds) % If 'xconds' is not a structure
+    
+    if isempty(xconds) % If 'xconds' is empty
+        % Select conditions file
+        [fcond, pcond] = uigetfile({'*.mat', 'MATLAB File (*.mat)'; ...
+            '*.*', 'All Files (*.*)'}, ...
+            'Select conditions file');
+        fcond = fullfile(pcond, fcond);
+
+    else
+        % Otherwise, 'xconds' must be a file name
+        fcond = xconds;
+        
+    end
     
     % If conditions file doesn't exist, return
     if ~exist(sprintf('%s', fcond), 'file')

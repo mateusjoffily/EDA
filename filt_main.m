@@ -28,7 +28,7 @@ function [sigout filtout] = filt_main(sigin, fs, filtin, plot_ok)
 %
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 23-11-2010 Mateus Joffily
 
 % Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
 %
@@ -80,7 +80,7 @@ for i=1:length(filtin)
             % Adjust filter order, if zeros are too small. It avoids errors
             % like 'Matrix is close to singular or badly scaled.'
             n = filtin(i).n;
-            while all(B < 1e-6)
+            while all(B < 1e-12)
                 n = n - 1;
                 if n == 0
                     break

@@ -133,9 +133,9 @@ if length(varargin) >= 2
     set(data.handles.menu_file_export_file_data, 'Enable', 'on');
     set(data.handles.menu_file_export_file_results_edr, 'Enable', 'on');
     set(data.handles.menu_file_import_file_conds, 'Enable', 'on');
-    set(data.handles.menu_data_eda,   'Enable', 'on');
-    set(data.handles.menu_data_edr,   'Enable', 'on');
-    set(data.handles.menu_view_edr,   'Enable', 'on');
+    set(data.handles.menu_data_eda, 'Enable', 'on');
+    set(data.handles.menu_data_edr, 'Enable', 'on');
+    set(data.handles.menu_view_edr, 'Enable', 'on');
 end
 
 % Set EDA axes
@@ -854,7 +854,10 @@ set(data.handles.menu_view_conds, 'Enable', state);
 set(data.handles.menu_data_conds, 'Enable', state);
 set(data.handles.menu_file_export_workspace_conds, 'Enable', state);
 set(data.handles.menu_file_export_file_results_conditions, 'Enable', state);
-set(data.handles.menu_view_edl,   'Enable', state);
+set(data.handles.menu_view_edl, 'Enable', state);
+
+% Enable Statistcis menus
+set(data.handles.menu_statistics_boxplot, 'Enable', state);
    
 end
 
@@ -1169,6 +1172,7 @@ if ~isempty(data.conds)
                             data.handles.plot_conds, 'on');
     eda_gui('toggle_state', data.handles.menu_view_edl, ...
                             data.handles.plot_edl, 'on');
+    set(data.handles.menu_statistics_boxplot, 'Enable', 'on');
 end
 
 end
@@ -1306,5 +1310,23 @@ v3 = min(data.new.eda) - 0.1 * ( max(data.new.eda) - min(data.new.eda) );
 v4 = max(data.new.eda) + 0.1 * ( max(data.new.eda) - min(data.new.eda) );
 v=axis; 
 axis([v(1) v(2) v3 v4]);
+
+end
+
+% --------------------------------------------------------------------
+function menu_statistics_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+end
+
+% --------------------------------------------------------------------
+function menu_statistics_boxplot_Callback(hObject, eventdata, data)
+% hObject    handle to menu_file_export_file_results_edr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% data       structure with handles and user data (see GUIDATA)
+
+eda_stat_boxplot(data.new.eda, data.new.fs, data.new.edr, data.conds);
 
 end

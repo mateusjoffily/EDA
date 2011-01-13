@@ -1,6 +1,6 @@
 function eda_save_text(eda, fs, edr, conds, ftxt)
 % EDA_SAVE_TEXT Save EDA results in text file format
-%   EDA_SAVE_TEXT(ftxt, eda, fs, edr, conds)
+%   EDA_SAVE_TEXT(eda, fs, edr, conds, ftxt)
 %
 % Required input arguments:
 %   eda   - 1-by-n vector of EDA samples

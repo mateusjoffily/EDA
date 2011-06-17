@@ -4,7 +4,7 @@ function conds = eda_conditions(eda, fs, xconds, edr, latency_range, opendlg)
 %
 % Required input arguments:
 %    eda    - 1-by-n vector of EDA samples
-%    fs     - samplig frequency (Hz)
+%    fs     - sampling frequency (Hz)
 %    xconds - Can be the fullpath for a *.mat file or a pre-filled conds
 %             structure array (see below).
 %             The *.mat file must include the following cell arrays (each

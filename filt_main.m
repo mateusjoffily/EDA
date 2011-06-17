@@ -95,6 +95,11 @@ for i=1:length(filtin)
                 disp(sprintf('Warning: Butterworth filter order adjusted to n=%d', ...
                     filtin(i).n));
             end
+ 
+%             % Prevent numerical problems due to roundoff errors that may  
+%             % occur when forming the transfer function using the [b,a] syntax
+%             [Z, P, K] = butter(filtin(i).n, wn, filtin(i).type);
+%             [B,A] = zp2tf(Z,P,K);
             
             % Fill-in filtout struct
             filtout(i) = struct( ...

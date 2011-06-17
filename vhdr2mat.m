@@ -23,9 +23,9 @@ function varargout = vhdr2mat(vhdrfile, vhdrpath, srange, chans, plotOK, saveOK)
 %   - EEGLAB software installed (http://sccn.ucsd.edu/eeglab/)
 % _________________________________________________________________________
 
-% Last modified 16-11-2010 Mateus Joffily
+% Last modified 16-06-2011 Mateus Joffily
 
-% Copyright (C) 2002, 2007, 2010 Mateus Joffily, mateusjoffily@gmail.com.
+% Copyright (C) 2002, 2007, 2010, 2011 Mateus Joffily, mateusjoffily@gmail.com.
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -89,24 +89,22 @@ EEG.data = [];
 [B,i,j] = unique([EEG.event(:).latency]);
 if length(i) ~= length(j)
     idx = find(diff([0 i]) > 1);
-    disp('Warning: time coincident events overlapped in triggers channel.');
+    disp('Warning: events onset conflict: events overlapped in events channel.');
     disp(strcat('event', num2str(i(idx)'), ':', ...
                 char({EEG.event(idx).type}), ' <-> ', ...
                 char({EEG.event(idx+1).type})));
 end
 
-% Unique events names
+% Unique events
 event_names = unique({EEG.event(:).type});
-
-% Each event is coded as its type number
-for iE = 1:numel(event_names)
-    if strcmp(event_names{iE}, 'Sync On') || ...
-       strcmp(event_names{iE}, 'boundary')
-        % Ignore 'Sync On' and 'boundary' events
-        continue;
-    end
-    idx = strcmp({EEG.event(:).type}, event_names{iE});
-    data(end, [EEG.event(idx).latency]) = str2double(event_names{iE}(2:end));
+nE = length(event_names);
+event = struct('name', event_names, ...
+               'onsets', cell(1,nE));
+% Loop over events
+for iE = 1:nE
+    eOK = strcmp({EEG.event(:).type}, event(iE).name);
+    data(end, [EEG.event(eOK).latency]) = iE; % Each event has a unique ID
+    event(iE).onsets = [EEG.event(eOK).latency] / fs;
 end
 
 % Plot data

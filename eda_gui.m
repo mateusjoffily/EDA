@@ -20,7 +20,7 @@ function varargout = eda_gui(varargin)
 %    eda_conditions.m) can also be loaded for inspection in the GUI and EDL
 %    measurement. Use the menu "File > Import from File > Conditions" to load
 %    conditions *.mat file. Conditions (shaded area) displayed in the GUI may 
-%    correspond the EDR onset latency criterion used by eda.conditions.m to 
+%    correspond the EDR onset latency criterion used by eda_conditions.m to 
 %    relate EDR to specific events or the duration of the event itself. 
 %    Use Data > Coditions > Shade menu to select between these two display 
 %    modes.

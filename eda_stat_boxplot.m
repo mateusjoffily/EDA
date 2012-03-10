@@ -33,8 +33,8 @@ if nargin < 4
     error('Missing inputs');
 end
 
-EDR = struct('valleyTime', {}, 'amplitude', {}, 'riseTime', {}, ...
-             'slope', {}, 'cond', {});
+EDR = struct('valleyTime', {}, 'amplitude', {}, 'magnitude', {}, 'riseTime', {}, ...
+             'slope', {}, 'cond', {}, 'cond_mag', {});
 EDL = struct('value', {}, 'cond', {});
 
 % Loop over Conditions
@@ -44,12 +44,19 @@ for iC = 1:numel(conds)
             edr_stats = eda_edr_stats(eda, fs, edr, conds(iC).iEDR{iE});
         
             EDR(1).valleyTime = [EDR.valleyTime ...
-                               edr_stats.valleyTime-conds(iC).onsets(iE)];
-            EDR(1).amplitude  = [EDR.amplitude edr_stats.amplitude];
-            EDR(1).riseTime   = [EDR.riseTime edr_stats.riseTime];
-            EDR(1).slope      = [EDR.slope edr_stats.slope];
+                               edr_stats.valleyTime(1)-conds(iC).onsets(iE)];
+            EDR(1).amplitude  = [EDR.amplitude edr_stats.amplitude(1)];
+            EDR(1).magnitude  = [EDR.magnitude edr_stats.amplitude(1)];
+            EDR(1).riseTime   = [EDR.riseTime edr_stats.riseTime(1)];
+            EDR(1).slope      = [EDR.slope edr_stats.slope(1)];
             EDR(1).cond = [EDR.cond; ....
                             cellstr(repmat(conds(iC).name,length(iE),1))];
+            EDR(1).cond_mag = [EDR.cond_mag; ....
+                               cellstr(repmat(conds(iC).name,length(iE),1))];
+        else
+            EDR(1).magnitude  = [EDR.magnitude 0];
+            EDR(1).cond_mag = [EDR.cond_mag; ....
+                               cellstr(repmat(conds(iC).name,length(iE),1))];
         end
     end
     
@@ -67,26 +74,32 @@ boxplot(EDR.amplitude, EDR.cond)
 xlabel('Conditions');
 ylabel('EDR Amplitude (microSiemens)');
 
-% EDR Onset time
+% EDR Magnitude
 subplot(2,3,2)
+boxplot(EDR.magnitude, EDR.cond_mag)
+xlabel('Conditions');
+ylabel('EDR Magnitude (microSiemens)');
+
+% EDR Onset time
+subplot(2,3,3)
 boxplot(EDR.valleyTime, EDR.cond)
 xlabel('Conditions');
 ylabel('EDR Onset Time (seconds)');
 
 % EDR Rise time
-subplot(2,3,3)
+subplot(2,3,4)
 boxplot(EDR.riseTime, EDR.cond)
 xlabel('Conditions');
 ylabel('EDR Rise Time (seconds)');
 
 % EDR Slope
-subplot(2,3,4)
+subplot(2,3,5)
 boxplot(EDR.slope, EDR.cond)
 xlabel('Conditions');
 ylabel('EDR Slope (microSiemens/seconds)');
 
 % EDL
-subplot(2,3,5)
+subplot(2,3,6)
 boxplot(EDL.value, EDL.cond)
 xlabel('Conditions');
 ylabel('EDL (microSiemens)');

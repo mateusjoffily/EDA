@@ -5,9 +5,11 @@ function varargout = eda_gui(varargin)
 %   (1) EDA_GUI(eda, fs, edr)
 %
 % Required Input arguments:
-%   eda - 1-by-n vector of EDA samples
-%   fs  - EDA sampling rate (Hz) 
-%   edr - electrodermal response (EDR) structure array (see eda_edr.m)
+%   eda    - 1-by-n vector of EDA samples
+%   fs     - EDA sampling rate (Hz) 
+%   edr    - electrodermal response (EDR) structure array (see eda_edr.m)
+%   xconds - Can be the fullpath for a *.mat file or a pre-filled conds
+%            structure array (see eda_conditions.m).
 % 
 % Description:
 %    Allows for detected EDRs to be manually edited by the user. Each EDR 
@@ -105,25 +107,33 @@ guidata(hObject, handles);
 if length(varargin) < 2
     eda = [];
     fs  = NaN;
-    
 else
     eda = varargin{1};
     fs  = varargin{2};
 end
 
-if length(varargin) > 2
-    edr = varargin{3};
-
-else
+if length(varargin) < 3 || isempty(varargin{3})
     edr = eda_edr;
+else
+    edr = varargin{3};
+end
 
+if length(varargin) < 4 || isempty(varargin{4})
+    xconds = [];
+else
+    xconds = varargin{4};
 end
 
 % Initialize data structure
 data.handles  = handles;
 data.new      = struct('eda', eda, 'fs', fs, 'filt', [], 'edr', edr);
 data.old      = data.new ;
-data.conds    = eda_conditions;
+if isempty(xconds)
+	data.conds = eda_conditions;
+else
+    data.conds = eda_conditions(data.new.eda, data.new.fs, xconds, ...
+                                data.new.edr, [], true);
+end
 data.nCond    = 1;
 
 if length(varargin) >= 2
@@ -140,6 +150,7 @@ end
 
 % Set EDA axes
 %--------------------------------------------------------------------------
+figure(handles.output);
 hold(data.handles.axes_eda, 'on');
 
 % Axes Y limits
@@ -220,6 +231,21 @@ ylabel('EDA (microSiemens)');
 % Store Data structure
 guidata(hObject, data); 
 
+% Load conditions
+%----------------------------------------------------------------------
+if ~isempty(data.conds)
+    % Update conditions contextmenu
+    conds_contextmenu_update(hObject);
+
+    % Update conditions plot
+    eda_gui('conds_plot_update', hObject);
+    
+    eda_gui('toggle_state', data.handles.menu_view_conds, ...
+        data.handles.plot_conds, 'on');
+    eda_gui('toggle_state', data.handles.menu_view_edl, ...
+        data.handles.plot_edl, 'on');
+end
+
 % UIWAIT makes eda_gui wait for user response (see UIRESUME)
 % uiwait(handles.fig_eda);
 end
@@ -270,11 +296,11 @@ function menu_file_Callback(hObject, eventdata, handles)
 end
 
 %----------------------------------------------------------------------
-function conds_plot_update(nCond)
+function conds_plot_update(fig, nCond)
 % Perform action when mouse click over figure's object
 
 % Get data
-data = guidata(gcbf);
+data = guidata(fig);
 
 % If conditions is empty, just clear the plots and return
 if isempty(data.conds)
@@ -286,7 +312,7 @@ if isempty(data.conds)
     return
 end
 
-if nargin == 0
+if nargin < 2
     % Use last condition index
     nCond = data.nCond;
     
@@ -643,7 +669,7 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, ...
 guidata(hObject, data);
 
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % update all plots
 eda_gui('all_plot_update');
@@ -722,7 +748,7 @@ function menu_data_conds_shade_duration_Callback(hObject, eventdata, data)
 eda_gui('toggle_state', data.handles.menu_data_conds_shade_duration);
 eda_gui('toggle_state', data.handles.menu_data_conds_shade_latency);
 
-eda_gui('conds_plot_update');
+eda_gui('conds_plot_update', data.handles.output);
 
 end
 
@@ -735,7 +761,7 @@ function menu_data_conds_shade_latency_Callback(hObject, eventdata, data)
 eda_gui('toggle_state', data.handles.menu_data_conds_shade_duration);
 eda_gui('toggle_state', data.handles.menu_data_conds_shade_latency);
 
-eda_gui('conds_plot_update');
+eda_gui('conds_plot_update', data.handles.output);
 
 end
 
@@ -823,17 +849,17 @@ uiwait(msgbox(msg, 'About EDA Toolbox'));
 end
 
 % --------------------------------------------------------------------
-function conds_contextmenu_update
+function conds_contextmenu_update(fig)
 
 % Get data
-data = guidata(gcbf);
+data = guidata(fig);
 
 % Delete current childrens from conditions plot context menu
 delete(get(data.handles.menu_context_conds, 'Children'));
 
 % Add new conditions to conditions plot context menu
 for nCond = 1:length(data.conds)
-    hcb = sprintf('eda_gui(''conds_plot_update'',%d)', nCond);
+    hcb = sprintf('eda_gui(''conds_plot_update'', gcf, %d)', nCond);
     uimenu(data.handles.menu_context_conds, ...
            'Label', data.conds(nCond).name, ...
            'Callback', hcb);
@@ -878,10 +904,10 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, [], ...
 guidata(hObject, data);
 
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % Update conditions plot
-eda_gui('conds_plot_update');
+eda_gui('conds_plot_update', hObject);
 
 % If conditions structure array not empty
 if ~isempty(data.conds)
@@ -926,7 +952,7 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, ...
 guidata(hObject, data);
     
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % Update EDA, EDR, EDL, Conditions 
 eda_gui('all_plot_update');
@@ -941,7 +967,7 @@ function all_plot_update
 data = guidata(gcbf);
 
 % Update conditions plot
-eda_gui('conds_plot_update');
+eda_gui('conds_plot_update', hObject);
 
 % update eda plots
 eda_gui('eda_plot_update');
@@ -973,7 +999,7 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, ...
 guidata(hObject, data);
 
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % Update EDA, EDR and Conditions plots
 eda_gui('all_plot_update');
@@ -1031,7 +1057,7 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, ...
 guidata(hObject, data);
 
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % Update EDA, EDR, and Conditions plots
 eda_gui('all_plot_update');
@@ -1148,7 +1174,7 @@ data.conds = eda_conditions(data.new.eda, data.new.fs, ...
 guidata(hObject, data);
 
 % Update conditions contextmenu
-conds_contextmenu_update;
+conds_contextmenu_update(hObject);
 
 % Update EDA, EDR and Conditions plots
 eda_gui('all_plot_update')

@@ -3,8 +3,8 @@ function edr = eda_edr(varargin)
 %
 % Formats:
 %   (1) edr = EDA_EDR(eda, fs)
-%   (2) edr = EDA_EDR(eda, fs, opendlg, thrin)
-%   (3) edr = EDA_EDR(eda, fs, opendlg, thrin, plotOK)
+%   (2) edr = EDA_EDR(eda, fs, thrin, opendlg)
+%   (3) edr = EDA_EDR(eda, fs, thrin, opendlg, plotOK)
 %
 % Required Input arguments:
 %   eda - 1-by-n vector of EDA samples
@@ -90,6 +90,7 @@ end
 
 % Set initial values
 eda = varargin{1};
+eda = eda(:)';      % Force eda to be row vector
 fs = varargin{2};
 opendlg = false;
 plotOK = false;
@@ -213,7 +214,7 @@ for i = 1:nEDR
         % If overlapping responses were found
         edr.type.v(i) = 3;          % change response type to 3
         edr.type.p = edr.type.v;
-        type3iap{i} = iap + 1;   % save acceleration points
+        type3iap{i} = iap + 1;  % save acceleration points
     end
 
 end
@@ -229,9 +230,12 @@ if edr.thresh.overlap
         % adjust index
         i = t + length([type3iap{1:t-1}]);
         % insert new valley-peak pair
-        edr.iPeaks = [edr.iPeaks(1:i-1) edr.iValleys(i)+type3iap{t} edr.iPeaks(i:end)];
-        edr.iValleys = [edr.iValleys(1:i)   edr.iValleys(i)+type3iap{t}+1 edr.iValleys(i+1:end)];
-        edr.type.v = [edr.type.v(1:i) repmat(3,1,length(type3iap{t})) edr.type.v(i+1:end)];
+        edr.iPeaks = [edr.iPeaks(1:i-1) edr.iValleys(i)+type3iap{t} ...
+                      edr.iPeaks(i:end)];
+        edr.iValleys = [edr.iValleys(1:i) edr.iValleys(i)+type3iap{t}+1 ...
+                        edr.iValleys(i+1:end)];
+        edr.type.v = [edr.type.v(1:i) repmat(3,1,length(type3iap{t})) ...
+                      edr.type.v(i+1:end)];
         edr.type.p = edr.type.v;
     end
 end

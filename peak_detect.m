@@ -63,6 +63,7 @@ if ~isempty(ip) && ~isempty(iv)
         end
     else
         ip = [];
+        iv = [];
     end
 else
     ip = [];

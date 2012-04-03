@@ -127,7 +127,7 @@ if saveOK
     [matpath, matfile] = fileparts(fullfile(vhdrpath, vhdrfile));
 
     % Rename EEG event
-    event = EEG.event;
+%     event = EEG.event;
 
     fmat = fullfile(matpath, [matfile '.mat']);
     if exist(fmat, 'file')
@@ -140,6 +140,8 @@ if saveOK
     else
         save(fmat, 'data', 'fs', 'event');
     end
+else
+    fmat = '';
 end
 
 % Set output variables
@@ -154,4 +156,9 @@ switch nargout
         varargout{1} = data;
         varargout{2} = fs;
         varargout{3} = event;
+    case 4
+        varargout{1} = data;
+        varargout{2} = fs;
+        varargout{3} = event;
+        varargout{4} = fmat;
 end

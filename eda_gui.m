@@ -967,6 +967,7 @@ function all_plot_update
 data = guidata(gcbf);
 
 % Update conditions plot
+hObject = data.handles.output;
 eda_gui('conds_plot_update', hObject);
 
 % update eda plots

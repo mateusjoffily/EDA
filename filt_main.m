@@ -148,6 +148,11 @@ for i=1:length(filtin)
         % Zero-phase filter
         sigout = filtfilt(B,A,sigout);
 
+        % It seems that the output of filtfilt() is always a column vector 
+        % in some platforms. Thus, we reshape 'sigout' to guarantee that 
+        % it has the same dimension as 'sigin'.
+        sigout = reshape(sigout, size(sigin));
+        
         if plot_ok
             % Plot filter frequence response
             figure('Color', 'w', 'Name', sprintf('Filter %d', i));

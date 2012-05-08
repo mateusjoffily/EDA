@@ -132,10 +132,12 @@ if saveOK
     fmat = fullfile(matpath, [matfile '.mat']);
     if exist(fmat, 'file')
         answer = questdlg( ...
-           sprintf('%s.mat already exists! Do you want to replace it?', ...
+           sprintf('%s.mat already exists! Do you want to append data to it?', ...
                 matfile), 'Yes', 'No');
         if strcmp(answer, 'Yes')
-            save(fmat, 'data', 'fs', 'event');
+            save(fmat, 'data', 'fs', 'event', '-APPEND');
+        else
+            saveOK = false;
         end
     else
         save(fmat, 'data', 'fs', 'event');
@@ -161,4 +163,10 @@ switch nargout
         varargout{2} = fs;
         varargout{3} = event;
         varargout{4} = fmat;
+    case 5
+        varargout{1} = data;
+        varargout{2} = fs;
+        varargout{3} = event;
+        varargout{4} = fmat;
+        varargout{5} = saveOK;
 end

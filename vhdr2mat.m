@@ -130,18 +130,18 @@ if saveOK
 %     event = EEG.event;
 
     fmat = fullfile(matpath, [matfile '.mat']);
-    if exist(fmat, 'file')
-        answer = questdlg( ...
-           sprintf('%s.mat already exists! Do you want to append data to it?', ...
-                matfile), 'Yes', 'No');
-        if strcmp(answer, 'Yes')
-            save(fmat, 'data', 'fs', 'event', '-APPEND');
-        else
-            saveOK = false;
-        end
-    else
+%     if exist(fmat, 'file')
+%         answer = questdlg( ...
+%            sprintf('%s.mat already exists! Do you want to append data to it?', ...
+%                 matfile), 'Yes', 'No');
+%         if strcmp(answer, 'Yes')
+%             save(fmat, 'data', 'fs', 'event', '-APPEND');
+%         else
+%             saveOK = false;
+%         end
+%     else
         save(fmat, 'data', 'fs', 'event');
-    end
+%     end
 else
     fmat = '';
 end

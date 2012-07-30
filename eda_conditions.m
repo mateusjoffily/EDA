@@ -91,12 +91,27 @@ if ~isstruct(xconds) % If 'xconds' is not a structure
         return
     end
 
-    % Load 'names', 'onsets' and 'conditions'
-    load(fcond, 'names', 'onsets', 'durations');
+    % Load 'names', 'onsets' 'durations' and 'conditions' (if exist)
+    warning('off','MATLAB:load:variableNotFound');
+    load(fcond, 'names', 'onsets', 'durations', 'conds');
     
     xconds = struct('name', names, 'onsets', onsets, ...
-                    'durations', durations);
+                        'durations', durations);
+     
+    if isempty(latency_range) && exist('conds', 'var') && ...
+       ~isempty(conds) && isfield(conds, 'latency_range')
+        latency_range = conds(1).latency_range;
+    end
 
+%     if exist('conds', 'var')
+%         xconds = struct('name', {conds.name}, ...
+%                         'onsets', {conds.onsets}, ...
+%                         'durations', {conds.durations}, ...
+%                         'latency_range', {conds.latency_range});
+%     else
+%         xconds = struct('name', names, 'onsets', onsets, ...
+%                         'durations', durations);
+%     end
 end
 
 if nargin < 5 || ( nargin >= 5 && isempty(latency_range) )

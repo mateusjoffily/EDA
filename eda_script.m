@@ -15,6 +15,11 @@
 [fdata, pdata] = uigetfile('*.mat', 'Select data file');
 load(fullfile(pdata, fdata), 'data', 'fs');    % load data
 
+% Force matrix to be in row format
+if size(data,1)>size(data,2)
+    data=data';
+end
+
 nChan = 1;                % select EDA channel
 eda = data(nChan,:);      % EDA signal to be processed
 

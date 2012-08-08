@@ -71,6 +71,10 @@ if nargin < 4
     edr = eda_edr;
 end
 
+if nargin < 5
+    latency_range = [];
+end
+
 if ~isstruct(xconds) % If 'xconds' is not a structure
     
     if isempty(xconds) % If 'xconds' is empty

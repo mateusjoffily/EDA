@@ -95,12 +95,23 @@ if ~isstruct(xconds) % If 'xconds' is not a structure
         return
     end
 
-    % Load 'names', 'onsets' 'durations' and 'conditions' (if exist)
-    warning('off','MATLAB:load:variableNotFound');
-    load(fcond, 'names', 'onsets', 'durations', 'conds');
+    % Load 'names', 'onsets' 'durations'
+    % warning('off','MATLAB:load:variableNotFound');
+    load(fcond, 'names', 'onsets', 'durations');
     
-    xconds = struct('name', names, 'onsets', onsets, ...
-                        'durations', durations);
+    % Try to load 'conds' (if it exists)
+    if ~isempty( whos('-file', fcond, 'conds') )
+        c = load(fcond, 'conds');
+        % check if loaded conds is a valid conditions struct
+        if isstruct(c.conds) && all( isfield(c.conds, fields(conds)) )
+            conds = c.conds;
+        end
+    end
+    
+    % force fields to have the same dimensions
+    xconds = struct('name', reshape(names,1,numel(names)), ...
+                    'onsets', reshape(onsets,1,numel(onsets)), ...
+                    'durations', reshape(durations,1,numel(durations)));
      
     if isempty(latency_range) && exist('conds', 'var') && ...
        ~isempty(conds) && isfield(conds, 'latency_range')

@@ -142,6 +142,21 @@ if nargin < 5 || ( nargin >= 5 && isempty(latency_range) )
 end
 
 if nargin > 5 && opendlg 
+    % Display some information
+    msg = 'The ''latency range'' informs the width ';
+    msg = [msg 'of the analysis window for the detection of the onset '];
+    msg = [msg 'of SCRs specific to the stimuli. The minimum value '];
+    msg = [msg 'indicates the shortest onset latency and it applies '];
+    msg = [msg 'to both conditions with duration equal (very brief '];
+    msg = [msg 'stimuli) or greater than zero. The maximum value '];
+    msg = [msg 'indicates the largest onset latency, and it applies '];
+    msg = [msg 'only to conditions with duration equal to zero (i.e., '];
+    msg = [msg 'very brief stimuli). In the case of stimuli with '];
+    msg = [msg 'duration longer than zero, the maximum latency value '];
+    msg = [msg 'will be automatically set to the specified duration '];
+    msg = [msg 'of the stimuli.'];
+    helpdlg(msg, 'EDR onset atency range info')
+    
     % Open GUI
     prompt={'Minimum', ...
             'Maximum'};

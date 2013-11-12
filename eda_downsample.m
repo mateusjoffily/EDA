@@ -1,20 +1,20 @@
-function [eda actfs] = eda_downsample(eda, fs, newfs)
+function [eda,newfs] = eda_downsample(eda, fs, reqfs)
 % EDA_DOWNSAMPLE EDA downsample
-%   [edaout actfs] = EDA_DOWNSAMPLE(edain, fs, newfs)
+%   [edaout newfs] = EDA_DOWNSAMPLE(edain, fs, reqfs)
 %
 % Required input arguments:
 %    eda     - 1-by-n vector of EDA samples
-%    fs      - orginal samplig frequency (Hz)
-%    newfs   - request new sampling frequency (Hz)
+%    fs      - old samplig frequency (Hz)
+%    reqfs   - requested sampling frequency (Hz)
 %
 % Output arguments:
 %    eda     - downsampled EDA data
-%    actfs   - actual new sampling rate (Hz)
+%    newfs   - new sampling rate (Hz)
 %
 % Description: 
 %    Use only if EDA has been acquired with very high sampling rate 
 %    (e.g. inside the MR scanner). Make sure that the Shannon-Nyquist 
-%    sampling theorem criterion is maintained. Use only after low-pass 
+%    sampling theorem criterion is satisfied. Use only after low-pass 
 %    filtering EDA (see eda_filt.m).
 % _________________________________________________________________________
 
@@ -36,7 +36,7 @@ function [eda actfs] = eda_downsample(eda, fs, newfs)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-if nargin < 3 || isempty(newfs)
+if nargin < 3 || isempty(reqfs)
     prompt   = {'Enter new sampling rate (Hz)'};
     def      = {sprintf('%.02f', fs)};
     dlgTitle = 'Downsample EDA';
@@ -44,7 +44,7 @@ if nargin < 3 || isempty(newfs)
     answer   = inputdlg(prompt,dlgTitle,lineNo,def);
 
     if ~isempty(answer) && ~isempty(answer{1})
-        newfs = str2double(answer{1});
+        reqfs = str2double(answer{1});
         
     else
         % Goodbye message
@@ -55,11 +55,11 @@ if nargin < 3 || isempty(newfs)
 end
 
 % Calculate downsampling factor
-M = ceil( fs / newfs );
+M = ceil( fs / reqfs );
 
 if M > 1
     eda = eda(:, 1:M:end);
-    actfs  = fs / M;
+    newfs  = fs / M;
 end
 
 % Goodbye message

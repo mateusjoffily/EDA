@@ -29,7 +29,7 @@ function edr = eda_edr(varargin)
 %       type - EDR type, according to Bucsein (1992, p.136) terminology:
 %             (1) - single response (ideal), it never occurs
 %             (2) - response overlaps preceding response during recovery time
-%             (3) - response overlaps preceding response during rise time
+%             (3) - response overlaps preceding/posterior response during rise time
 %             (4) - response manually detected by the user (set only by eda_gui.m)
 %       thresh  - EDR detection thresholds used:
 %           amp      - [uSiemens] amplitude threshold
@@ -38,7 +38,8 @@ function edr = eda_edr(varargin)
 %                   'slope' is a struct that contains fields 'min' and 'max'
 %           risetime - [s] rise time threshold
 %                      'risetime' is a struct that contains fields 'min' and 'max'
-%           overlap  - detect overlapping EDRs (boolean)
+%           overlap  - detect overlapping EDRs (boolean) (see Bucsein
+%           (1992, p.136) methods B and C)
 % 
 % References:
 %   Dawson, Schell and Filion (2000) The Electrodermal System. 

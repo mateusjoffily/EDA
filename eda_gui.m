@@ -103,6 +103,9 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% Set defaults
+set(0,'DefaultLineMarkerSize',10);
+
 % Initialize variables 
 if length(varargin) < 2
     eda = [];
@@ -784,6 +787,10 @@ function menu_data_edr_detect_Callback(hObject, eventdata, data)
 % Auto-detect new EDRs
 data.new.edr = eda_edr(data.new.eda, data.new.fs, ...
                        data.new.edr.thresh, true);
+                 
+% Update current conditions structure
+data.conds = eda_conditions(data.new.eda, data.new.fs, ...
+                            data.conds, data.new.edr);
 
 % Update Data structure
 guidata(hObject, data);
@@ -1112,7 +1119,7 @@ data.new.edr  = eda_edr;
 data.conds    = eda_conditions;
 
 % Check file extension
-[p f ext] = fileparts(fname);
+[p, f, ext] = fileparts(fname);
 
 % Import Data file...
 switch (ext)

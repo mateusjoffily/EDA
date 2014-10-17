@@ -182,10 +182,27 @@ end
 %--------------------------------------------------------------------------
 
 % Detect EDR peaks and valleys
-[edr.iValleys, edr.iPeaks] = peak_detect(eda, fs);
+[iValleys, iPeaks] = peak_detect(eda, fs);
 
 % Number of detected EDRs
-nEDR = length(edr.iValleys);
+nEDR = length(iValleys);
+
+% Check density of EDRs detected (< 0.5 EDR/sec)
+nEDR_sec = nEDR*fs/length(eda);
+if nEDR_sec >= 0.5
+    msg = sprintf('%0.2f EDRs per second were detected! This is quite a lot.\n', nEDR_sec);
+    msg = sprintf('%sYou should consider low-pass filetring the EDA signal before continuing.\n', msg);
+    msg = sprintf('%s\nDo you really want to continue? \n', msg);
+    choice = questdlg(msg, 'Warning', 'Yes', 'No','No');
+    % Handle response
+    if strcmp(choice, 'No')
+        return;
+    end
+end
+
+% Accept detect EDR peaks and valleys
+edr.iValleys = iValleys;
+edr.iPeaks   = iPeaks;
 
 % Set all detected responses' type to 2
 edr.type.v = repmat(2, 1, nEDR);

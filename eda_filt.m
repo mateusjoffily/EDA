@@ -117,7 +117,7 @@ if plotOK
     hold on;
     p1=plot(t,edain);
     p2=plot(t,edaout);
-    set(p1, 'Color', [0.5 0.5 1], 'LineWidth', 1);
+    set(p1, 'Color', [1 0.5 0.5], 'LineWidth', 1);
     set(p2, 'Color', [0 0 1], 'LineWidth', 2);
     ylabel('uSiemens');
     xlabel('seconds');

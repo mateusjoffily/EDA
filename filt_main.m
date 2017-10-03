@@ -1,4 +1,4 @@
-function [sigout filtout] = filt_main(sigin, fs, filtin, plot_ok)
+function [sigout,filtout] = filt_main(sigin, fs, filtin, plot_ok)
 % FILT_MAIN Main filtering procedure
 %   [sigout filtout] = FILT_MAIN(sigin, fs, filtin, plot_ok)
 %

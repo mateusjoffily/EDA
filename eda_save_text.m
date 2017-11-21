@@ -71,17 +71,19 @@ function save_raw(eda, fs, edr, ftxt)
 %--------------------------------------------------------------------------
 
 % Get EDR statistics
-nEDR = numel(edr.iPeaks);
-edr_stats = eda_edr_stats(eda, fs, edr, 1:nEDR);
+nEDR      = numel(edr.iPeaks);
+idx       = 1:nEDR;
+edr_stats = eda_edr_stats(eda, fs, edr, idx);
 
 % Open file
 fid = fopen(ftxt, 'w');
 
 % Write statistics to file
-fprintf(fid, 'ValleyTime\tPeakTime\tAmplitude\tRiseTime\tSlope\tEDRtype\n');
-fprintf(fid, '%0.03f\t%0.03f\t%0.03f\t%0.03f\t%0.03f\t%d\n', ...
-    [edr_stats.valleyTime; edr_stats.peakTime; edr_stats.amplitude; ...
-    edr_stats.riseTime; edr_stats.slope; edr_stats.type]);
+fprintf(fid, 'Index\tValleyTime\tPeakTime\tAmplitude\tRiseTime\tSlope\tEDRtype\n');
+fprintf(fid, '%d\t%0.03f\t%0.03f\t%0.03f\t%0.03f\t%0.03f\t%d\n', ...
+    [idx; edr_stats.valleyTime; edr_stats.peakTime; ...
+     edr_stats.amplitude; edr_stats.riseTime; ...
+     edr_stats.slope; edr_stats.type]);
 
 % Close file
 fclose(fid);
@@ -128,10 +130,10 @@ for iC = 1:numel(conds)
         % Write to file
         fprintf(fid, '%s\t',    IndexEDR);
         fprintf(fid, '%d\t',    NumEDR);
-        fprintf(fid, '%0.4f\t', MinEDR);
-        fprintf(fid, '%0.4f\t', MaxEDR);
-        fprintf(fid, '%0.4f\t', MeanEDR);
-        fprintf(fid, '%0.4f\n', EDL);
+        fprintf(fid, '%0.3f\t', MinEDR);
+        fprintf(fid, '%0.3f\t', MaxEDR);
+        fprintf(fid, '%0.3f\t', MeanEDR);
+        fprintf(fid, '%0.3f\n', EDL);
     end
 end
 

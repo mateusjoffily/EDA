@@ -1,5 +1,5 @@
-function edr_stats = eda_stats(eda, fs, edr, iEDR)
-% EDR_STATS Electrodermal response (EDR) statistics
+function edr_stats = eda_edr_stats(eda, fs, edr, iEDR)
+% EDA_EDR_STATS Electrodermal response (EDR) statistics
 %   edl = EDA_EDR_STATS(eda, fs, edr, iEDR)
 %
 % Input arguments:

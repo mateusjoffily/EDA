@@ -28,7 +28,7 @@ function varargout = eda_gui(varargin)
 %    modes.
 % _________________________________________________________________________
 
-% Last modified 22-11-2010 Mateus Joffily
+% Last modified 04-07-2018 Mateus Joffily
 
 % EDA_GUI M-file for eda_gui.fig
 %      EDA_GUI, by itself, creates a new EDA_GUI or raises the existing
@@ -162,7 +162,7 @@ v4 = max(data.new.eda) + 0.1 * ( max(data.new.eda) - min(data.new.eda) );
 
 % Plot Conditions
 %----------------------------------------------------------------------
-h = area(NaN, NaN, ...
+h = area(NaN, NaN, -100, ...
      'Tag', 'plot_conds', ...
      'FaceColor', [0.8 1 0.8], ...
      'EdgeColor', [0.8 1 0.8], ...
@@ -337,7 +337,7 @@ else
     latency_wdw = data.conds(nCond).latency_wdw;
 end
 x = sort([latency_wdw(:); latency_wdw(:)])';
-y = repmat([0 100 100 0], 1, length(x)/4);
+y = repmat([-100 100 100 -100], 1, length(x)/4);
 set(data.handles.plot_conds, 'XData', x, 'YData', y);
 
 % Update EDL plot
@@ -886,6 +886,7 @@ end
 set(data.handles.menu_view_conds, 'Enable', state);
 set(data.handles.menu_data_conds, 'Enable', state);
 set(data.handles.menu_file_export_workspace_conds, 'Enable', state);
+set(data.handles.menu_file_export_file_conds, 'Enable', state);
 set(data.handles.menu_file_export_file_results_conditions, 'Enable', state);
 set(data.handles.menu_view_edl, 'Enable', state);
 
@@ -1232,6 +1233,35 @@ edr   = data.new.edr;
 conds = data.conds;
 
 save(fullfile(pname, fname), 'eda', 'fs', 'filt', 'edr', 'conds');
+
+end
+
+function menu_file_export_file_conds_Callback(hObject, eventdata, data)
+% hObject    handle to menu_file_export_file_conds (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% data       structure with handles and user data (see GUIDATA)
+
+if isempty(data.conds)
+    msg = sprintf('\nConditions is empty');
+    warndlg(msg, 'Warning');
+    return
+end
+
+% Select file to save Data
+[fname, pname] = uiputfile({'*.mat',  'MATLAB File (*.mat)'; ...
+                            '*.*', 'All Files (*.*)'}, 'Save Conditions as');
+
+if isequal(fname,0)
+   return
+end
+
+name          = {data.conds.name};
+onsets        = {data.conds.onsets};
+durations     = {data.conds.durations};
+latency_range = data.conds(1).latency_range;
+
+save(fullfile(pname, fname), 'name', 'onsets', 'durations', ...
+    'latency_range', '-APPEND');
 
 end
 

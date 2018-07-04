@@ -96,10 +96,14 @@ if ~isstruct(xconds) % If 'xconds' is not a structure
     end
 
     % Load 'names', 'onsets' 'durations'
-    % warning('off','MATLAB:load:variableNotFound');
     load(fcond, 'names', 'onsets', 'durations');
     
-    % Try to load 'conds' (if it exists)
+    % Load 'latency_range' if it exists
+    warning('off','MATLAB:load:variableNotFound');
+    load(fcond, 'latency_range');
+    warning('on','MATLAB:load:variableNotFound');
+
+    % Load 'conds' if it exists
     if ~isempty( whos('-file', fcond, 'conds') )
         c = load(fcond, 'conds');
         % check if loaded conds is a valid conditions struct

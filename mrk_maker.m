@@ -15,34 +15,63 @@ subjmask(subjmask ~= subjID) = 0;
 subjmask(subjmask == subjID) = 1;
 
 % Remove subject mask with pulse length less than 3ms
-if subjmask(1) == 1, subjmask(1) = 0; end; 
+if subjmask(1) == 1, subjmask(1) = 0; end
 subjmask = marker_cleanup(subjmask, fs, 3);
 
 % Event marker code
 event    = 2.^(0:length(chEV)-1) * dataAux(chEV,:);
 event    = event .* subjmask;
 
-% remove events very close in time
-dt  = 3;    % ms
-de  = diff(event);
-idx = find(de ~= 0);
-i1  = idx(1:end-1);
-i2  = idx(2:end);
-dex = de(i1) + de(i2);
-i_bad = find(dex > 0 & (i2-i1)/fs<(dt*10^-3));
-for i = i_bad(:)'
-    event(i1(i)+1:i2(i)+1) = event(i2(i)+1);
+% fix overlapped events
+event([1 end]) = 0;
+de = diff(event);
+i_bad = [];
+n     = 0;
+for i = find(de < 0)
+    if event(i+1) ~= 0
+        n        = n + 1;
+        i_bad(n) = i+1;
+    end
+end
+for i = find(de > 0)
+    if event(i) ~= 0
+        n        = n + 1;
+        i_bad(n) = i;
+    end
+end
+event(i_bad) = 0;
+
+% remove very short events
+t_min  = 1; % ms
+bevent = diff(event > 0); 
+ini    = find(bevent > 0); 
+fin    = find(bevent < 0);
+dt     = 1000 * (fin-ini) / fs;
+i_bad  = find(dt < t_min);
+for i = i_bad
+    event(ini(i)+1:fin(i)) = 0;
 end
 
+% % remove events very close in time
+% dt  = 3;    % ms
+% de  = diff(event);
+% idx = find(de ~= 0);
+% i1  = idx(1:end-1);
+% i2  = idx(2:end);
+% dex = de(i1) + de(i2);
+% i_bad = find(dex > 0 & (i2-i1)/fs<(dt*10^-3));
+% for i = i_bad(:)'
+%     event(i1(i)+1:i2(i)+1) = event(i2(i)+1);
+% end
+
 % names, onsets and durations
-code = unique(event(event>0));
-N    = length(code);
+N         = length(unique(event))-1;
 disp(['Number of event categories found = ' num2str(N)]);
 names     = cell(1,N);
 onsets    = cell(1,N);
 durations = cell(1,N);
 for n = 1:N
-    names{n}     = sprintf('event%02d', code(n));
+    names{n}     = sprintf('event%02d', n);
     onsets{n}    = (find(diff(event == n) > 0) + 1) / fs;
     durations{n} = 0;
     disp([names{n} ' -> ' num2str(length(onsets{n}))]);

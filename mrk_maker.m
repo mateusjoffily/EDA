@@ -52,18 +52,6 @@ for i = i_bad
     event(ini(i)+1:fin(i)) = 0;
 end
 
-% % remove events very close in time
-% dt  = 3;    % ms
-% de  = diff(event);
-% idx = find(de ~= 0);
-% i1  = idx(1:end-1);
-% i2  = idx(2:end);
-% dex = de(i1) + de(i2);
-% i_bad = find(dex > 0 & (i2-i1)/fs<(dt*10^-3));
-% for i = i_bad(:)'
-%     event(i1(i)+1:i2(i)+1) = event(i2(i)+1);
-% end
-
 % names, onsets and durations
 N         = length(unique(event))-1;
 disp(['Number of event categories found = ' num2str(N)]);
